@@ -20,6 +20,7 @@ class MainUI:
         self.root = root
         self.root.title("LinkedIn Easy Apply Bot")
         self.is_running = False
+        self.browser_open = False
         self.browser = BrowserManager(BROWSER_FILE)
         self.create_widgets()
 
@@ -35,44 +36,91 @@ class MainUI:
         self.notebook.add(self.autofill_tab.frame, text="Autofill")
         self.notebook.add(self.browser_tab.frame, text="Browser")
 
-        self.start_btn = ttk.Button(self.root, text="Start", command=self.toggle_bot)
-        self.start_btn.pack(pady=10)
+        btn_frame = ttk.Frame(self.root)
+        btn_frame.pack(pady=10)
 
-    def toggle_bot(self):
-        if not self.is_running:
-            self.start_browser_thread()
-        else:
-            self.stop_browser_thread()
+        self.open_browser_btn = ttk.Button(btn_frame, text="Open Browser", command=self.toggle_browser)
+        self.open_browser_btn.pack(side="left", padx=5)
 
-    def start_browser_thread(self):
-        thread = threading.Thread(target=self._start_browser)
+        self.start_btn = ttk.Button(btn_frame, text="Start", command=self.toggle_bot, state="disabled")
+        self.start_btn.pack(side="left", padx=5)
+
+    def start_browser_on_launch(self):
+        thread = threading.Thread(target=self._start_browser_on_launch)
         thread.daemon = True
         thread.start()
 
-    def _start_browser(self):
+    def _start_browser_on_launch(self):
         try:
-            self.browser.start()
-            self.root.after(0, self.on_browser_started)
+            self.browser.start_browser()
         except Exception as e:
             self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to start browser: {e}"))
 
-    def on_browser_started(self):
-        self.is_running = True
-        self.start_btn.config(text="Stop")
+    def toggle_browser(self):
+        if not self.browser_open:
+            self.open_browser_thread()
+        else:
+            self.close_browser_thread()
 
-    def stop_browser_thread(self):
-        thread = threading.Thread(target=self._stop_browser)
+    def open_browser_thread(self):
+        thread = threading.Thread(target=self._open_browser)
         thread.daemon = True
         thread.start()
 
-    def _stop_browser(self):
+    def _open_browser(self):
+        try:
+            self.browser.start_browser()
+            self.root.after(0, self.on_browser_opened)
+        except Exception as e:
+            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to open browser: {e}"))
+
+    def on_browser_opened(self):
+        self.browser_open = True
+        self.open_browser_btn.config(text="Close Browser")
+        self.start_btn.config(state="normal")
+
+    def close_browser_thread(self):
+        thread = threading.Thread(target=self._close_browser)
+        thread.daemon = True
+        thread.start()
+
+    def _close_browser(self):
         try:
             self.browser.stop()
-            self.root.after(0, self.on_browser_stopped)
+            self.root.after(0, self.on_browser_closed)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to stop browser: {e}"))
+            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to close browser: {e}"))
 
-    def on_browser_stopped(self):
+    def on_browser_closed(self):
+        self.browser_open = False
+        self.open_browser_btn.config(text="Open Browser")
+        self.start_btn.config(state="disabled")
+        self.is_running = False
+        self.start_btn.config(text="Start")
+
+    def toggle_bot(self):
+        if not self.is_running:
+            self.start_browser_navigation_thread()
+        else:
+            self.stop_bot()
+
+    def start_browser_navigation_thread(self):
+        thread = threading.Thread(target=self._start_browser_navigation)
+        thread.daemon = True
+        thread.start()
+
+    def _start_browser_navigation(self):
+        try:
+            self.browser.go_to_url(linkedin_url)
+            self.root.after(0, self.on_bot_started)
+        except Exception as e:
+            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to navigate: {e}"))
+
+    def on_bot_started(self):
+        self.is_running = True
+        self.start_btn.config(text="Stop")
+
+    def stop_bot(self):
         self.is_running = False
         self.start_btn.config(text="Start")
 

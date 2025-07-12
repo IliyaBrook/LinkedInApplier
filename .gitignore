@@ -84,3 +84,5 @@ Thumbs.db
 
 #custom folder
 cheatsheets/
+chrome_profile/*
+!chrome_profile/.gitkeep
