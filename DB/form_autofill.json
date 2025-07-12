@@ -3,7 +3,8 @@
     "firstName": "Iliya",
     "lastName": "Brook",
     "email": "iliyabrook1987@gmail.com",
-    "phone": "0549303336"
+    "phone": "0549303336",
+    "jobTitle": "Full Stack Developer"
   },
   "radioButtons": {
     "workAuthorization": "Yes",
