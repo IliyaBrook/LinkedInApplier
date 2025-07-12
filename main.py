@@ -61,12 +61,28 @@ class App:
         self.dropdown_fields = {}
 
         self.autofill_sections = {}
+        self.autofill_section_frames = {}
+        self.autofill_section_states = {}
         for section in ["inputFieldConfigs", "radioButtons", "dropdowns"]:
-            frame = ttk.LabelFrame(self.autofill_frame, text=section)
-            frame.pack(fill="x", padx=5, pady=5)
-            self.autofill_sections[section] = frame
+            frame = ttk.Frame(self.autofill_frame)
+            frame.pack(fill="x", padx=5, pady=2)
+            btn = ttk.Button(frame, text=section, width=25, command=lambda s=section: self.toggle_section(s))
+            btn.pack(anchor="w", pady=(2,0))
+            content = ttk.Frame(frame)
+            # content.pack(fill="x", padx=10, pady=(0,2))  # убираю автопоказ
+            self.autofill_sections[section] = content
+            self.autofill_section_frames[section] = frame
+            self.autofill_section_states[section] = False  # по умолчанию свёрнуты
 
         ttk.Button(self.autofill_frame, text="Save Autofill", command=self.save_autofill).pack(pady=5)
+
+    def toggle_section(self, section):
+        state = self.autofill_section_states[section]
+        if state:
+            self.autofill_sections[section].pack_forget()
+        else:
+            self.autofill_sections[section].pack(fill="x", padx=10, pady=(0,2))
+        self.autofill_section_states[section] = not state
 
     def create_browser_tab(self):
         self.executable_path_var = tk.StringVar()
@@ -126,8 +142,10 @@ class App:
             for section, fields in data.items():
                 for key, value in fields.items():
                     var = tk.StringVar(value=value)
+                    label = ttk.Label(self.autofill_sections[section], text=key)
+                    label.pack(anchor="w", padx=5, pady=(4,0))
                     entry = ttk.Entry(self.autofill_sections[section], textvariable=var, width=40)
-                    entry.pack(anchor="w", padx=5, pady=2)
+                    entry.pack(anchor="w", padx=5, pady=(0,2))
                     if section == "inputFieldConfigs":
                         self.input_fields[key] = var
                     elif section == "radioButtons":
