@@ -5,7 +5,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-# linkedin_url = "https://www.linkedin.com/feed/"
 linkedin_url = "https://www.google.com"
 
 class BrowserManager:
@@ -29,6 +28,9 @@ class BrowserManager:
             chrome_options.binary_location = executable_path
             # chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
             # chrome_options.add_argument(f"--profile-directory={profile_directory}")
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
             self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
             self.driver.get(url)
             return True
