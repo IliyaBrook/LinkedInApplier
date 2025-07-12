@@ -4,7 +4,8 @@
     "lastName": "Brook",
     "email": "iliyabrook1987@gmail.com",
     "phone": "0549303336",
-    "jobTitle": "Full Stack Developer"
+    "jobTitle": "Full Stack Developer",
+    "file": ""
   },
   "radioButtons": {
     "workAuthorization": "Yes",

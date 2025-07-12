@@ -123,6 +123,7 @@ class MainUI:
         try:
             self.browser.go_to_url(linkedin_url)
             self.browser.fill_job_search_and_submit(AUTOFILL_FILE)
+            self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE)
             self.root.after(0, self.on_bot_started)
         except Exception as e:
             self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to navigate: {e}"))
