@@ -5,6 +5,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from pathlib import Path
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 linkedin_url = "https://www.linkedin.com/jobs/"
 
@@ -48,6 +53,29 @@ class BrowserManager:
     def go_to_url(self, url=linkedin_url):
         if self.driver:
             self.driver.get(url)
+
+    def fill_job_search_and_submit(self, autofill_path):
+        if not self.driver:
+            print("No driver")
+            return False
+        try:
+            with open(autofill_path, "r", encoding="utf-8") as f:
+                autofill_data = json.load(f)
+            job_title = autofill_data.get("inputFieldConfigs", {}).get("jobTitle", "")
+            print("job_title:", job_title)
+            if not job_title:
+                return False
+            wait = WebDriverWait(self.driver, 20)
+            # Ищем по aria-label, так как id может меняться
+            search_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[aria-label='Search by title, skill, or company']")))
+            print("search_input found:", search_input)
+            search_input.clear()
+            search_input.send_keys(job_title)
+            search_input.send_keys(Keys.ENTER)
+            return True
+        except Exception as e:
+            print("Error in fill_job_search_and_submit:", e)
+            return False
 
     def stop(self):
         try:

@@ -42,7 +42,13 @@ class MainUI:
         self.open_browser_btn = ttk.Button(btn_frame, text="Open Browser", command=self.toggle_browser)
         self.open_browser_btn.pack(side="left", padx=5)
 
-        self.start_btn = ttk.Button(btn_frame, text="Start", command=self.toggle_bot, state="disabled")
+        self.start_btn = ttk.Button(
+            btn_frame, 
+            text="Start", 
+            command=self.toggle_bot, 
+            # disable for now
+            # state="disabled"
+            )
         self.start_btn.pack(side="left", padx=5)
 
     def start_browser_on_launch(self):
@@ -94,7 +100,11 @@ class MainUI:
     def on_browser_closed(self):
         self.browser_open = False
         self.open_browser_btn.config(text="Open Browser")
-        self.start_btn.config(state="disabled")
+        self.start_btn.config(
+            # disable for now
+            # state="disabled"
+            state="normal"
+            )
         self.is_running = False
         self.start_btn.config(text="Start")
 
@@ -112,6 +122,7 @@ class MainUI:
     def _start_browser_navigation(self):
         try:
             self.browser.go_to_url(linkedin_url)
+            self.browser.fill_job_search_and_submit(AUTOFILL_FILE)
             self.root.after(0, self.on_bot_started)
         except Exception as e:
             self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to navigate: {e}"))
