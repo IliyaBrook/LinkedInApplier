@@ -1,0 +1,16 @@
+{
+  "inputFieldConfigs": {
+    "firstName": "Ilya",
+    "lastName": "Ivanov",
+    "email": "ilya@example.com",
+    "phone": "+1234567890"
+  },
+  "radioButtons": {
+    "workAuthorization": "Yes",
+    "willingToRelocate": "No"
+  },
+  "dropdowns": {
+    "educationLevel": "Bachelor's Degree",
+    "yearsOfExperience": "3-5"
+  }
+}
