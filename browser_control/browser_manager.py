@@ -99,56 +99,72 @@ class BrowserManager:
             wait = WebDriverWait(self.driver, 20)
             time.sleep(2)
             job_cards = self.driver.find_elements(By.CSS_SELECTOR, ".scaffold-layout__list-item")
+            # 1. Собрать titleFilterWords и titleSkipWords
+            title_filter_words = [w.lower() for w in filters.get("titleFilterWords", [])]
+            title_skip_words = [w.lower() for w in filters.get("titleSkipWords", [])]
+            bad_words = [w.lower() for w in filters.get("badWords", [])]
+            filtered_jobs = []
             for idx, job_card in enumerate(job_cards):
                 try:
-                    # Новый селектор для заголовка вакансии
                     try:
                         job_title_el = job_card.find_element(By.CSS_SELECTOR, ".artdeco-entity-lockup__title .job-card-container__link")
                     except Exception:
                         try:
                             job_title_el = job_card.find_element(By.CSS_SELECTOR, ".job-card-container__link")
                         except Exception:
-                            print(f"Job title link not found in job card {idx}")
                             continue
-                    job_title = job_title_el.text.strip()
-                    skip = False
-                    if filters.get("titleSkipWords"):
-                        for word in filters["titleSkipWords"]:
-                            if word.lower() in job_title.lower():
-                                skip = True
-                                break
-                    if skip:
+                    job_title = job_title_el.text.strip().lower()
+                    subtitle = ""
+                    try:
+                        subtitle = job_card.find_element(By.CSS_SELECTOR, '[class*="subtitle"]').text.strip().lower()
+                    except Exception:
+                        pass
+                    # 2. Фильтрация по titleSkipWords
+                    if any(skip in job_title or skip in subtitle for skip in title_skip_words):
                         continue
-                    if filters.get("titleFilterWords"):
-                        found = False
-                        for word in filters["titleFilterWords"]:
-                            if word.lower() in job_title.lower():
-                                found = True
-                                break
-                        if not found:
-                            continue
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", job_title_el)
+                    # 3. Фильтрация по titleFilterWords
+                    if title_filter_words and not any(f in job_title for f in title_filter_words):
+                        continue
+                    filtered_jobs.append((job_card, job_title_el))
+                except Exception as e:
+                    print(f"Error filtering job {idx}: {e}")
+            # 4. Скроллинг списка (делаем scrollIntoView для каждого)
+            for job_card, job_title_el in filtered_jobs:
+                try:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", job_card)
+                    time.sleep(0.5)
                     job_title_el.click()
                     time.sleep(2)
+                    # После клика — проверка badWords
                     try:
-                        easy_apply_btn = self.driver.find_element(By.XPATH, "//button[contains(@class, 'jobs-apply-button') and contains(., 'Easy Apply')]")
+                        job_details = self.driver.find_element(By.CSS_SELECTOR, '[class*="jobs-box__html-content"]').text.lower()
+                        if any(bad in job_details for bad in bad_words):
+                            continue
                     except Exception:
-                        # TODO: обработка не-Easy Apply вакансий
-                        continue
-                    # Если есть Easy Apply, подать заявку
+                        pass
+                    # Easy Apply обработка
                     apply_to_job(self.driver, autofill_data)
                 except Exception as e:
-                    print(f"Error processing job {idx}: {e}")
-                    continue
-            # После обработки всех вакансий — переход на следующую страницу
+                    print(f"Error processing filtered job: {e}")
+            # 5. Скроллинг вниз перед поиском Next
             try:
-                next_btn = self.driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Page next"]:not([disabled])')
+                scroll_container = self.driver.find_element(By.CSS_SELECTOR, ".scaffold-layout__list > div")
+                self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight;", scroll_container)
+                time.sleep(1)
+            except Exception:
+                pass
+            # 6. Переход к следующей странице
+            try:
+                # Новый селектор для Next
+                next_btn = self.driver.find_element(By.CSS_SELECTOR, 'button.jobs-search-pagination__button--next[aria-label*="next"]:not([disabled])')
                 if next_btn:
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", next_btn)
+                    time.sleep(1)
                     next_btn.click()
                     time.sleep(3)
                     self.process_job_listings(autofill_path, filters_path)
-            except Exception:
-                print("No more pages or next button not found. Finished.")
+            except Exception as e:
+                print(f"No more pages or next button not found. Finished. {e}")
         except Exception as e:
             print("Error in process_job_listings:", e)
             return False
