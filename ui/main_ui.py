@@ -7,7 +7,6 @@ from ui.filters_tab import FiltersTab
 from ui.autofill_tab import AutofillTab
 from ui.browser_tab import BrowserTab
 from browser_control.browser_manager import BrowserManager
-from browser_control.browser_manager import linkedin_url
 import json
 
 DB_DIR = "DB"
@@ -121,8 +120,10 @@ class MainUI:
 
     def _start_browser_navigation(self):
         try:
-            self.browser.go_to_url(linkedin_url)
-            self.browser.fill_job_search_and_submit(AUTOFILL_FILE)
+            with open(FILTERS_FILE, "r", encoding="utf-8") as f:
+                filters = json.load(f)
+            job_apply_url = filters.get("job_apply_url", "https://www.linkedin.com/jobs/")
+            self.browser.go_to_url(job_apply_url)
             self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE)
             self.root.after(0, self.on_bot_started)
         except Exception as e:

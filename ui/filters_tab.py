@@ -10,8 +10,11 @@ class FiltersTab:
         self.badWords_var = tk.StringVar()
         self.titleFilterWords_var = tk.StringVar()
         self.titleSkipWords_var = tk.StringVar()
+        self.timeFilter_var = tk.StringVar()
+        self.job_apply_url = ""
         self.create_widgets()
         self.load_filters()
+        self.update_job_apply_url()
 
     def create_widgets(self):
         ttk.Label(self.frame, text="Bad Words (comma separated)").pack(anchor="w")
@@ -26,6 +29,12 @@ class FiltersTab:
         self.titleSkipWords_entry = ttk.Entry(self.frame, textvariable=self.titleSkipWords_var, width=60)
         self.titleSkipWords_entry.pack(fill="x")
 
+        ttk.Label(self.frame, text="Time Filter").pack(anchor="w")
+        self.timeFilter_combo = ttk.Combobox(self.frame, textvariable=self.timeFilter_var, state="readonly", width=30)
+        self.timeFilter_combo['values'] = ("Any Time", "Past 24 hours", "Past Week", "Past Month")
+        self.timeFilter_combo.pack(fill="x")
+        self.timeFilter_combo.bind("<<ComboboxSelected>>", lambda e: self.on_time_filter_change())
+
         ttk.Button(self.frame, text="Save Filters", command=self.save_filters).pack(pady=5)
 
     def load_filters(self):
@@ -35,18 +44,72 @@ class FiltersTab:
             self.badWords_var.set(", ".join(data.get("badWords", [])))
             self.titleFilterWords_var.set(", ".join(data.get("titleFilterWords", [])))
             self.titleSkipWords_var.set(", ".join(data.get("titleSkipWords", [])))
+            self.timeFilter_var.set(self.time_filter_label(data.get("timeFilter", "any")))
         except Exception:
-            pass
+            self.timeFilter_var.set("Any Time")
 
     def save_filters(self):
         data = {
             "badWords": [w.strip() for w in self.badWords_var.get().split(",") if w.strip()],
             "titleFilterWords": [w.strip() for w in self.titleFilterWords_var.get().split(",") if w.strip()],
-            "titleSkipWords": [w.strip() for w in self.titleSkipWords_var.get().split(",") if w.strip()]
+            "titleSkipWords": [w.strip() for w in self.titleSkipWords_var.get().split(",") if w.strip()],
+            "timeFilter": self.time_filter_code(self.timeFilter_var.get())
         }
         try:
             with open(self.filters_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
+            self.update_job_apply_url()
             messagebox.showinfo("Success", "Filters saved successfully.")
         except Exception as e:
-            messagebox.showerror("Error", str(e)) 
+            messagebox.showerror("Error", str(e))
+
+    def on_time_filter_change(self):
+        self.save_filters()
+
+    def update_job_apply_url(self):
+        try:
+            with open("DB/form_autofill.json", "r", encoding="utf-8") as f:
+                autofill = json.load(f)
+            job_title = autofill.get("inputFieldConfigs", {}).get("jobTitle", "")
+        except Exception:
+            job_title = ""
+        time_code = self.time_filter_code(self.timeFilter_var.get())
+        base_url = "https://www.linkedin.com/jobs/search/?"
+        params = []
+        if job_title:
+            params.append(f"keywords={job_title.replace(' ', '%20')}")
+        if time_code == "r86400":
+            params.append("f_TPR=r86400")
+        elif time_code == "r604800":
+            params.append("f_TPR=r604800")
+        elif time_code == "r2592000":
+            params.append("f_TPR=r2592000")
+        url = base_url + "&".join(params)
+        self.job_apply_url = url
+        # Сохраняем в user_filters.json для main_ui
+        try:
+            with open(self.filters_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            data["job_apply_url"] = url
+            with open(self.filters_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception:
+            pass
+
+    def time_filter_code(self, label):
+        if label == "Past 24 hours":
+            return "r86400"
+        elif label == "Past Week":
+            return "r604800"
+        elif label == "Past Month":
+            return "r2592000"
+        return "any"
+
+    def time_filter_label(self, code):
+        if code == "r86400":
+            return "Past 24 hours"
+        elif code == "r604800":
+            return "Past Week"
+        elif code == "r2592000":
+            return "Past Month"
+        return "Any Time" 

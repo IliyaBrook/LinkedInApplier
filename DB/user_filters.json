@@ -1,5 +1,7 @@
 {
-  "badWords": ["senior", "lead", "manager"],
-  "titleFilterWords": ["python", "developer"],
-  "titleSkipWords": ["intern", "junior"]
+  "badWords": [],
+  "titleFilterWords": [],
+  "titleSkipWords": [],
+  "timeFilter": "any",
+  "job_apply_url": "https://www.linkedin.com/jobs/search/?keywords=Full%20Stack%20Developer"
 }
