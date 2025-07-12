@@ -14,7 +14,7 @@ This application is a bot that uses a browser to automate job applications on Li
 1. The app must have a graphical interface where the user can start the application.
 2. The user can change filtering parameters stored in `user_data/data.json`. Filters include: `badWords`, `titleFilterWords`, `titleSkipWords`.
 3. The bot applies only to "Easy Apply" jobs and fills out forms. If a value is missing in the app database (in keys like `radioButtons`, `dropdowns`, or in `inputFieldConfigs`), the bot should add the missing data so the user can fill it in later.
-4. There is a similar Chrome extension; its .js files are in `@.cursor/example_from_chrome_ext` for reference. You may reuse logic, but only write new code in Python.
+4. There is a similar Chrome extension; its .js files are in @.cursor/example_from_chrome_ext for reference. You may reuse logic, but only write new code in Python.
 5. Use context7 to get up-to-date information about library usage
 6. Write clean code using patterns such as Don't Repeat Yourself and MVC architecture
 

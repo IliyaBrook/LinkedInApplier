@@ -81,3 +81,6 @@ driver.log
 # System files
 .DS_Store
 Thumbs.db 
+
+#custom folder
+cheatsheets/
