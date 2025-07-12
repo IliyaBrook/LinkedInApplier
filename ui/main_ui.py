@@ -1,10 +1,14 @@
 import os
+import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk
 from ui.filters_tab import FiltersTab
 from ui.autofill_tab import AutofillTab
 from ui.browser_tab import BrowserTab
+from browser_control.browser_manager import BrowserManager
+from browser_control.browser_manager import linkedin_url
+import json
 
 DB_DIR = "DB"
 FILTERS_FILE = os.path.join(DB_DIR, "user_filters.json")
@@ -16,6 +20,7 @@ class MainUI:
         self.root = root
         self.root.title("LinkedIn Easy Apply Bot")
         self.is_running = False
+        self.browser = BrowserManager(BROWSER_FILE)
         self.create_widgets()
 
     def create_widgets(self):
@@ -34,13 +39,60 @@ class MainUI:
         self.start_btn.pack(pady=10)
 
     def toggle_bot(self):
-        self.is_running = not self.is_running
-        if self.is_running:
-            self.start_btn.config(text="Stop")
-            # Здесь будет запуск бота
+        if not self.is_running:
+            self.start_browser_thread()
         else:
-            self.start_btn.config(text="Start")
-            # Здесь будет остановка бота
+            self.stop_browser_thread()
+
+    def start_browser_thread(self):
+        thread = threading.Thread(target=self._start_browser)
+        thread.daemon = True
+        thread.start()
+
+    def _start_browser(self):
+        try:
+            self.browser.start()
+            # Гарантируем переход на нужную страницу
+            try:
+                self.browser.driver.get(linkedin_url)
+            except Exception:
+                try:
+                    self.browser.driver.execute_script(f"window.open({linkedin_url}, '_self');")
+                except Exception:
+                    pass
+            # Проверяем, действительно ли открыта нужная страница
+            current_url = None
+            try:
+                current_url = self.browser.driver.current_url
+            except Exception:
+                pass
+            if current_url and 'linkedin.com/feed' in current_url:
+                self.root.after(0, self.on_browser_started)
+            else:
+                self.browser.stop()
+                self.root.after(0, lambda: messagebox.showerror("Error", "Failed to open LinkedIn feed page."))
+        except Exception as e:
+            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to start browser: {e}"))
+
+    def on_browser_started(self):
+        self.is_running = True
+        self.start_btn.config(text="Stop")
+
+    def stop_browser_thread(self):
+        thread = threading.Thread(target=self._stop_browser)
+        thread.daemon = True
+        thread.start()
+
+    def _stop_browser(self):
+        try:
+            self.browser.stop()
+            self.root.after(0, self.on_browser_stopped)
+        except Exception as e:
+            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to stop browser: {e}"))
+
+    def on_browser_stopped(self):
+        self.is_running = False
+        self.start_btn.config(text="Start")
 
 def run():
     root = ThemedTk(theme="arc")
