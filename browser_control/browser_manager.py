@@ -5,7 +5,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-linkedin_url = "https://www.linkedin.com/feed/"
+# linkedin_url = "https://www.linkedin.com/feed/"
+linkedin_url = "https://www.google.com"
 
 class BrowserManager:
     def __init__(self, settings_path):

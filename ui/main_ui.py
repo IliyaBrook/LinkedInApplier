@@ -52,25 +52,7 @@ class MainUI:
     def _start_browser(self):
         try:
             self.browser.start()
-            # Гарантируем переход на нужную страницу
-            try:
-                self.browser.driver.get(linkedin_url)
-            except Exception:
-                try:
-                    self.browser.driver.execute_script(f"window.open({linkedin_url}, '_self');")
-                except Exception:
-                    pass
-            # Проверяем, действительно ли открыта нужная страница
-            current_url = None
-            try:
-                current_url = self.browser.driver.current_url
-            except Exception:
-                pass
-            if current_url and 'linkedin.com/feed' in current_url:
-                self.root.after(0, self.on_browser_started)
-            else:
-                self.browser.stop()
-                self.root.after(0, lambda: messagebox.showerror("Error", "Failed to open LinkedIn feed page."))
+            self.root.after(0, self.on_browser_started)
         except Exception as e:
             self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to start browser: {e}"))
 
