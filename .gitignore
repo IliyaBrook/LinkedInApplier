@@ -75,7 +75,8 @@ driver.log
 .vscode/
 
 # Cursor
-.cursor/
+.cursor/**/*.js
+.cursor/**/*.json
 
 # System files
 .DS_Store
