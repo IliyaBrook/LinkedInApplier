@@ -5,7 +5,8 @@
     "email": "iliyabrook1987@gmail.com",
     "phone": "0549303336",
     "jobTitle": "Full Stack Developer",
-    "file": ""
+    "Phone": "0549303336",
+    "Mobile phone number": "0549303336"
   },
   "radioButtons": [
     {
@@ -57,7 +58,7 @@
     },
     {
       "placeholderIncludes": "Email",
-      "count": 1,
+      "count": 2,
       "options": [
         {
           "value": "Select an option",
@@ -74,7 +75,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 2,
+      "count": 4,
       "options": [
         {
           "value": "Select an option",
@@ -1321,7 +1322,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 1,
+      "count": 2,
       "options": [
         {
           "value": "Select an option",

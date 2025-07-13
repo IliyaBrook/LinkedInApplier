@@ -41,6 +41,6 @@
     "Marketing",
     "Staff"
   ],
-  "timeFilter": "r86400",
+  "timeFilter": "r604800",
   "easyApplyOnly": true
 }

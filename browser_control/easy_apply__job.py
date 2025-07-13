@@ -253,6 +253,20 @@ def apply_to_job(driver, autofill_data):
                 )
                 next_btn.click()
                 time.sleep(2)
+                # Uncheck Follow company checkbox if it exists
+                try:
+                    follow_checkbox = form.find_element(
+                        By.ID, "follow-company-checkbox"
+                    )
+                    if follow_checkbox.is_selected():
+                        driver.execute_script(
+                            "arguments[0].scrollIntoView({block: 'center'});",
+                            follow_checkbox,
+                        )
+                        follow_checkbox.click()
+                        time.sleep(0.5)
+                except Exception:
+                    pass
                 try:
                     submit_btn = form.find_element(
                         By.XPATH,
