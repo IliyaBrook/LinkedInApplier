@@ -43,7 +43,14 @@ class AutofillTab:
             def _on_mousewheel(event, c=canvas):
                 c.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-            content.bind_all("<MouseWheel>", _on_mousewheel)
+            def _bind_mousewheel(event, c=canvas):
+                c.bind_all("<MouseWheel>", lambda e: _on_mousewheel(e, c))
+
+            def _unbind_mousewheel(event, c=canvas):
+                c.unbind_all("<MouseWheel>")
+
+            canvas.bind("<Enter>", _bind_mousewheel)
+            canvas.bind("<Leave>", _unbind_mousewheel)
             canvas.pack(side="left", fill="x", expand=True)
             vsb.pack(side="right", fill="y")
             canvas.pack_forget()
