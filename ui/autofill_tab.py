@@ -195,16 +195,25 @@ class AutofillTab:
         button = self.section_buttons[section_id]
 
         if state:
-            # Hide section - hide entire container
             container.pack_forget()
-            # Update button text
             current_text = button.cget("text")
             new_text = current_text.replace("▼", "▶")
             button.configure(text=new_text)
         else:
-            # Show section - show container with proper packing
+            # Close all other sections
+            for other_id in self.autofill_section_states:
+                if other_id == section_id or not isinstance(
+                    self.autofill_section_states[other_id], bool
+                ):
+                    continue
+                if self.autofill_section_states[other_id]:
+                    other_container = self.autofill_sections[other_id + "_container"]
+                    other_button = self.section_buttons[other_id]
+                    other_container.pack_forget()
+                    other_text = other_button.cget("text")
+                    other_button.configure(text=other_text.replace("▼", "▶"))
+                    self.autofill_section_states[other_id] = False
             container.pack(fill="both", expand=True, padx=5, pady=(0, 5))
-            # Update button text
             current_text = button.cget("text")
             new_text = current_text.replace("▶", "▼")
             button.configure(text=new_text)
