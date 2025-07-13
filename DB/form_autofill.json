@@ -54,6 +54,1287 @@
         }
       ],
       "defaultValue": "Yes"
+    },
+    {
+      "placeholderIncludes": "Email",
+      "count": 1,
+      "options": [
+        {
+          "value": "Select an option",
+          "text": "Select an option",
+          "selected": false
+        },
+        {
+          "value": "iliyabrook1987@gmail.com",
+          "text": "iliyabrook1987@gmail.com",
+          "selected": true
+        }
+      ],
+      "defaultValue": "iliyabrook1987@gmail.com"
+    },
+    {
+      "placeholderIncludes": "Phone country code",
+      "count": 2,
+      "options": [
+        {
+          "value": "Select an option",
+          "text": "Select an option",
+          "selected": false
+        },
+        {
+          "value": "Israel (+972)",
+          "text": "Israel (+972)",
+          "selected": true
+        },
+        {
+          "value": "Afghanistan (+93)",
+          "text": "Afghanistan (+93)",
+          "selected": false
+        },
+        {
+          "value": "Aland Islands (+358)",
+          "text": "Aland Islands (+358)",
+          "selected": false
+        },
+        {
+          "value": "Albania (+355)",
+          "text": "Albania (+355)",
+          "selected": false
+        },
+        {
+          "value": "Algeria (+213)",
+          "text": "Algeria (+213)",
+          "selected": false
+        },
+        {
+          "value": "American Samoa (+1)",
+          "text": "American Samoa (+1)",
+          "selected": false
+        },
+        {
+          "value": "Andorra (+376)",
+          "text": "Andorra (+376)",
+          "selected": false
+        },
+        {
+          "value": "Angola (+244)",
+          "text": "Angola (+244)",
+          "selected": false
+        },
+        {
+          "value": "Anguilla (+1)",
+          "text": "Anguilla (+1)",
+          "selected": false
+        },
+        {
+          "value": "Antarctica (+0)",
+          "text": "Antarctica (+0)",
+          "selected": false
+        },
+        {
+          "value": "Antigua and Barbuda (+1)",
+          "text": "Antigua and Barbuda (+1)",
+          "selected": false
+        },
+        {
+          "value": "Argentina (+54)",
+          "text": "Argentina (+54)",
+          "selected": false
+        },
+        {
+          "value": "Armenia (+374)",
+          "text": "Armenia (+374)",
+          "selected": false
+        },
+        {
+          "value": "Aruba (+297)",
+          "text": "Aruba (+297)",
+          "selected": false
+        },
+        {
+          "value": "Australia (+61)",
+          "text": "Australia (+61)",
+          "selected": false
+        },
+        {
+          "value": "Austria (+43)",
+          "text": "Austria (+43)",
+          "selected": false
+        },
+        {
+          "value": "Azerbaijan (+994)",
+          "text": "Azerbaijan (+994)",
+          "selected": false
+        },
+        {
+          "value": "Bahamas (+1)",
+          "text": "Bahamas (+1)",
+          "selected": false
+        },
+        {
+          "value": "Bahrain (+973)",
+          "text": "Bahrain (+973)",
+          "selected": false
+        },
+        {
+          "value": "Bangladesh (+880)",
+          "text": "Bangladesh (+880)",
+          "selected": false
+        },
+        {
+          "value": "Barbados (+1)",
+          "text": "Barbados (+1)",
+          "selected": false
+        },
+        {
+          "value": "Belarus (+375)",
+          "text": "Belarus (+375)",
+          "selected": false
+        },
+        {
+          "value": "Belgium (+32)",
+          "text": "Belgium (+32)",
+          "selected": false
+        },
+        {
+          "value": "Belize (+501)",
+          "text": "Belize (+501)",
+          "selected": false
+        },
+        {
+          "value": "Benin (+229)",
+          "text": "Benin (+229)",
+          "selected": false
+        },
+        {
+          "value": "Bermuda (+1)",
+          "text": "Bermuda (+1)",
+          "selected": false
+        },
+        {
+          "value": "Bhutan (+975)",
+          "text": "Bhutan (+975)",
+          "selected": false
+        },
+        {
+          "value": "Bolivia (+591)",
+          "text": "Bolivia (+591)",
+          "selected": false
+        },
+        {
+          "value": "Bosnia and Herzegovina (+387)",
+          "text": "Bosnia and Herzegovina (+387)",
+          "selected": false
+        },
+        {
+          "value": "Botswana (+267)",
+          "text": "Botswana (+267)",
+          "selected": false
+        },
+        {
+          "value": "Bouvet Island (+0)",
+          "text": "Bouvet Island (+0)",
+          "selected": false
+        },
+        {
+          "value": "Brazil (+55)",
+          "text": "Brazil (+55)",
+          "selected": false
+        },
+        {
+          "value": "British Indian Ocean Territory (+246)",
+          "text": "British Indian Ocean Territory (+246)",
+          "selected": false
+        },
+        {
+          "value": "Brunei Darussalam (+673)",
+          "text": "Brunei Darussalam (+673)",
+          "selected": false
+        },
+        {
+          "value": "Bulgaria (+359)",
+          "text": "Bulgaria (+359)",
+          "selected": false
+        },
+        {
+          "value": "Burkina Faso (+226)",
+          "text": "Burkina Faso (+226)",
+          "selected": false
+        },
+        {
+          "value": "Burundi (+257)",
+          "text": "Burundi (+257)",
+          "selected": false
+        },
+        {
+          "value": "Cambodia (+855)",
+          "text": "Cambodia (+855)",
+          "selected": false
+        },
+        {
+          "value": "Cameroon (+237)",
+          "text": "Cameroon (+237)",
+          "selected": false
+        },
+        {
+          "value": "Canada (+1)",
+          "text": "Canada (+1)",
+          "selected": false
+        },
+        {
+          "value": "Cape Verde (+238)",
+          "text": "Cape Verde (+238)",
+          "selected": false
+        },
+        {
+          "value": "Caribbean Nations (+0)",
+          "text": "Caribbean Nations (+0)",
+          "selected": false
+        },
+        {
+          "value": "Cayman Islands (+1)",
+          "text": "Cayman Islands (+1)",
+          "selected": false
+        },
+        {
+          "value": "Central African Republic (+236)",
+          "text": "Central African Republic (+236)",
+          "selected": false
+        },
+        {
+          "value": "Chad (+235)",
+          "text": "Chad (+235)",
+          "selected": false
+        },
+        {
+          "value": "Chile (+56)",
+          "text": "Chile (+56)",
+          "selected": false
+        },
+        {
+          "value": "China (+86)",
+          "text": "China (+86)",
+          "selected": false
+        },
+        {
+          "value": "Christmas Island (+61)",
+          "text": "Christmas Island (+61)",
+          "selected": false
+        },
+        {
+          "value": "Cocos (Keeling) Islands (+61)",
+          "text": "Cocos (Keeling) Islands (+61)",
+          "selected": false
+        },
+        {
+          "value": "Colombia (+57)",
+          "text": "Colombia (+57)",
+          "selected": false
+        },
+        {
+          "value": "Comoros (+269)",
+          "text": "Comoros (+269)",
+          "selected": false
+        },
+        {
+          "value": "Congo (+242)",
+          "text": "Congo (+242)",
+          "selected": false
+        },
+        {
+          "value": "Cook Islands (+682)",
+          "text": "Cook Islands (+682)",
+          "selected": false
+        },
+        {
+          "value": "Costa Rica (+506)",
+          "text": "Costa Rica (+506)",
+          "selected": false
+        },
+        {
+          "value": "Cote D’Ivoire (Ivory Coast) (+225)",
+          "text": "Cote D’Ivoire (Ivory Coast) (+225)",
+          "selected": false
+        },
+        {
+          "value": "Croatia (+385)",
+          "text": "Croatia (+385)",
+          "selected": false
+        },
+        {
+          "value": "Cuba (+53)",
+          "text": "Cuba (+53)",
+          "selected": false
+        },
+        {
+          "value": "Cyprus (+357)",
+          "text": "Cyprus (+357)",
+          "selected": false
+        },
+        {
+          "value": "Czech Republic (+420)",
+          "text": "Czech Republic (+420)",
+          "selected": false
+        },
+        {
+          "value": "Democratic Republic of the Congo (+243)",
+          "text": "Democratic Republic of the Congo (+243)",
+          "selected": false
+        },
+        {
+          "value": "Denmark (+45)",
+          "text": "Denmark (+45)",
+          "selected": false
+        },
+        {
+          "value": "Djibouti (+253)",
+          "text": "Djibouti (+253)",
+          "selected": false
+        },
+        {
+          "value": "Dominica (+1)",
+          "text": "Dominica (+1)",
+          "selected": false
+        },
+        {
+          "value": "Dominican Republic (+1)",
+          "text": "Dominican Republic (+1)",
+          "selected": false
+        },
+        {
+          "value": "Ecuador (+593)",
+          "text": "Ecuador (+593)",
+          "selected": false
+        },
+        {
+          "value": "Egypt (+20)",
+          "text": "Egypt (+20)",
+          "selected": false
+        },
+        {
+          "value": "El Salvador (+503)",
+          "text": "El Salvador (+503)",
+          "selected": false
+        },
+        {
+          "value": "Equatorial Guinea (+240)",
+          "text": "Equatorial Guinea (+240)",
+          "selected": false
+        },
+        {
+          "value": "Eritrea (+291)",
+          "text": "Eritrea (+291)",
+          "selected": false
+        },
+        {
+          "value": "Estonia (+372)",
+          "text": "Estonia (+372)",
+          "selected": false
+        },
+        {
+          "value": "Ethiopia (+251)",
+          "text": "Ethiopia (+251)",
+          "selected": false
+        },
+        {
+          "value": "Falkland Islands (Malvinas) (+500)",
+          "text": "Falkland Islands (Malvinas) (+500)",
+          "selected": false
+        },
+        {
+          "value": "Faroe Islands (+298)",
+          "text": "Faroe Islands (+298)",
+          "selected": false
+        },
+        {
+          "value": "Federated States of Micronesia (+691)",
+          "text": "Federated States of Micronesia (+691)",
+          "selected": false
+        },
+        {
+          "value": "Fiji (+679)",
+          "text": "Fiji (+679)",
+          "selected": false
+        },
+        {
+          "value": "Finland (+358)",
+          "text": "Finland (+358)",
+          "selected": false
+        },
+        {
+          "value": "France (+33)",
+          "text": "France (+33)",
+          "selected": false
+        },
+        {
+          "value": "French Guiana (+594)",
+          "text": "French Guiana (+594)",
+          "selected": false
+        },
+        {
+          "value": "French Polynesia (+689)",
+          "text": "French Polynesia (+689)",
+          "selected": false
+        },
+        {
+          "value": "French Southern Territories (+0)",
+          "text": "French Southern Territories (+0)",
+          "selected": false
+        },
+        {
+          "value": "Gabon (+241)",
+          "text": "Gabon (+241)",
+          "selected": false
+        },
+        {
+          "value": "Gambia (+220)",
+          "text": "Gambia (+220)",
+          "selected": false
+        },
+        {
+          "value": "Georgia (+995)",
+          "text": "Georgia (+995)",
+          "selected": false
+        },
+        {
+          "value": "Germany (+49)",
+          "text": "Germany (+49)",
+          "selected": false
+        },
+        {
+          "value": "Ghana (+233)",
+          "text": "Ghana (+233)",
+          "selected": false
+        },
+        {
+          "value": "Gibraltar (+350)",
+          "text": "Gibraltar (+350)",
+          "selected": false
+        },
+        {
+          "value": "Greece (+30)",
+          "text": "Greece (+30)",
+          "selected": false
+        },
+        {
+          "value": "Greenland (+299)",
+          "text": "Greenland (+299)",
+          "selected": false
+        },
+        {
+          "value": "Grenada (+1)",
+          "text": "Grenada (+1)",
+          "selected": false
+        },
+        {
+          "value": "Guadeloupe (+590)",
+          "text": "Guadeloupe (+590)",
+          "selected": false
+        },
+        {
+          "value": "Guam (+1)",
+          "text": "Guam (+1)",
+          "selected": false
+        },
+        {
+          "value": "Guatemala (+502)",
+          "text": "Guatemala (+502)",
+          "selected": false
+        },
+        {
+          "value": "Guernsey (+44)",
+          "text": "Guernsey (+44)",
+          "selected": false
+        },
+        {
+          "value": "Guinea (+224)",
+          "text": "Guinea (+224)",
+          "selected": false
+        },
+        {
+          "value": "Guinea-Bissau (+245)",
+          "text": "Guinea-Bissau (+245)",
+          "selected": false
+        },
+        {
+          "value": "Guyana (+592)",
+          "text": "Guyana (+592)",
+          "selected": false
+        },
+        {
+          "value": "Haiti (+509)",
+          "text": "Haiti (+509)",
+          "selected": false
+        },
+        {
+          "value": "Heard Island and McDonald Islands (+0)",
+          "text": "Heard Island and McDonald Islands (+0)",
+          "selected": false
+        },
+        {
+          "value": "Honduras (+504)",
+          "text": "Honduras (+504)",
+          "selected": false
+        },
+        {
+          "value": "Hong Kong (+852)",
+          "text": "Hong Kong (+852)",
+          "selected": false
+        },
+        {
+          "value": "Hungary (+36)",
+          "text": "Hungary (+36)",
+          "selected": false
+        },
+        {
+          "value": "Iceland (+354)",
+          "text": "Iceland (+354)",
+          "selected": false
+        },
+        {
+          "value": "India (+91)",
+          "text": "India (+91)",
+          "selected": false
+        },
+        {
+          "value": "Indonesia (+62)",
+          "text": "Indonesia (+62)",
+          "selected": false
+        },
+        {
+          "value": "Iran (+98)",
+          "text": "Iran (+98)",
+          "selected": false
+        },
+        {
+          "value": "Iraq (+964)",
+          "text": "Iraq (+964)",
+          "selected": false
+        },
+        {
+          "value": "Ireland (+353)",
+          "text": "Ireland (+353)",
+          "selected": false
+        },
+        {
+          "value": "Isle of Man (+44)",
+          "text": "Isle of Man (+44)",
+          "selected": false
+        },
+        {
+          "value": "Italy (+39)",
+          "text": "Italy (+39)",
+          "selected": false
+        },
+        {
+          "value": "Jamaica (+1)",
+          "text": "Jamaica (+1)",
+          "selected": false
+        },
+        {
+          "value": "Japan (+81)",
+          "text": "Japan (+81)",
+          "selected": false
+        },
+        {
+          "value": "Jersey (+44)",
+          "text": "Jersey (+44)",
+          "selected": false
+        },
+        {
+          "value": "Jordan (+962)",
+          "text": "Jordan (+962)",
+          "selected": false
+        },
+        {
+          "value": "Kazakhstan (+7)",
+          "text": "Kazakhstan (+7)",
+          "selected": false
+        },
+        {
+          "value": "Kenya (+254)",
+          "text": "Kenya (+254)",
+          "selected": false
+        },
+        {
+          "value": "Kiribati (+686)",
+          "text": "Kiribati (+686)",
+          "selected": false
+        },
+        {
+          "value": "Korea (+82)",
+          "text": "Korea (+82)",
+          "selected": false
+        },
+        {
+          "value": "Korea (North) (+850)",
+          "text": "Korea (North) (+850)",
+          "selected": false
+        },
+        {
+          "value": "Kosovo (+383)",
+          "text": "Kosovo (+383)",
+          "selected": false
+        },
+        {
+          "value": "Kuwait (+965)",
+          "text": "Kuwait (+965)",
+          "selected": false
+        },
+        {
+          "value": "Kyrgyzstan (+996)",
+          "text": "Kyrgyzstan (+996)",
+          "selected": false
+        },
+        {
+          "value": "Laos (+856)",
+          "text": "Laos (+856)",
+          "selected": false
+        },
+        {
+          "value": "Latvia (+371)",
+          "text": "Latvia (+371)",
+          "selected": false
+        },
+        {
+          "value": "Lebanon (+961)",
+          "text": "Lebanon (+961)",
+          "selected": false
+        },
+        {
+          "value": "Lesotho (+266)",
+          "text": "Lesotho (+266)",
+          "selected": false
+        },
+        {
+          "value": "Liberia (+231)",
+          "text": "Liberia (+231)",
+          "selected": false
+        },
+        {
+          "value": "Libya (+218)",
+          "text": "Libya (+218)",
+          "selected": false
+        },
+        {
+          "value": "Liechtenstein (+423)",
+          "text": "Liechtenstein (+423)",
+          "selected": false
+        },
+        {
+          "value": "Lithuania (+370)",
+          "text": "Lithuania (+370)",
+          "selected": false
+        },
+        {
+          "value": "Luxembourg (+352)",
+          "text": "Luxembourg (+352)",
+          "selected": false
+        },
+        {
+          "value": "Macao (+853)",
+          "text": "Macao (+853)",
+          "selected": false
+        },
+        {
+          "value": "Macedonia (+389)",
+          "text": "Macedonia (+389)",
+          "selected": false
+        },
+        {
+          "value": "Madagascar (+261)",
+          "text": "Madagascar (+261)",
+          "selected": false
+        },
+        {
+          "value": "Malawi (+265)",
+          "text": "Malawi (+265)",
+          "selected": false
+        },
+        {
+          "value": "Malaysia (+60)",
+          "text": "Malaysia (+60)",
+          "selected": false
+        },
+        {
+          "value": "Maldives (+960)",
+          "text": "Maldives (+960)",
+          "selected": false
+        },
+        {
+          "value": "Mali (+223)",
+          "text": "Mali (+223)",
+          "selected": false
+        },
+        {
+          "value": "Malta (+356)",
+          "text": "Malta (+356)",
+          "selected": false
+        },
+        {
+          "value": "Marshall Islands (+692)",
+          "text": "Marshall Islands (+692)",
+          "selected": false
+        },
+        {
+          "value": "Martinique (+596)",
+          "text": "Martinique (+596)",
+          "selected": false
+        },
+        {
+          "value": "Mauritania (+222)",
+          "text": "Mauritania (+222)",
+          "selected": false
+        },
+        {
+          "value": "Mauritius (+230)",
+          "text": "Mauritius (+230)",
+          "selected": false
+        },
+        {
+          "value": "Mayotte (+262)",
+          "text": "Mayotte (+262)",
+          "selected": false
+        },
+        {
+          "value": "Mexico (+52)",
+          "text": "Mexico (+52)",
+          "selected": false
+        },
+        {
+          "value": "Moldova (+373)",
+          "text": "Moldova (+373)",
+          "selected": false
+        },
+        {
+          "value": "Monaco (+377)",
+          "text": "Monaco (+377)",
+          "selected": false
+        },
+        {
+          "value": "Mongolia (+976)",
+          "text": "Mongolia (+976)",
+          "selected": false
+        },
+        {
+          "value": "Montenegro (+382)",
+          "text": "Montenegro (+382)",
+          "selected": false
+        },
+        {
+          "value": "Montserrat (+1)",
+          "text": "Montserrat (+1)",
+          "selected": false
+        },
+        {
+          "value": "Morocco (+212)",
+          "text": "Morocco (+212)",
+          "selected": false
+        },
+        {
+          "value": "Mozambique (+258)",
+          "text": "Mozambique (+258)",
+          "selected": false
+        },
+        {
+          "value": "Myanmar (+95)",
+          "text": "Myanmar (+95)",
+          "selected": false
+        },
+        {
+          "value": "Namibia (+264)",
+          "text": "Namibia (+264)",
+          "selected": false
+        },
+        {
+          "value": "Nauru (+674)",
+          "text": "Nauru (+674)",
+          "selected": false
+        },
+        {
+          "value": "Nepal (+977)",
+          "text": "Nepal (+977)",
+          "selected": false
+        },
+        {
+          "value": "Netherlands (+31)",
+          "text": "Netherlands (+31)",
+          "selected": false
+        },
+        {
+          "value": "Netherlands Antilles (+0)",
+          "text": "Netherlands Antilles (+0)",
+          "selected": false
+        },
+        {
+          "value": "New Caledonia (+687)",
+          "text": "New Caledonia (+687)",
+          "selected": false
+        },
+        {
+          "value": "New Zealand (+64)",
+          "text": "New Zealand (+64)",
+          "selected": false
+        },
+        {
+          "value": "Nicaragua (+505)",
+          "text": "Nicaragua (+505)",
+          "selected": false
+        },
+        {
+          "value": "Niger (+227)",
+          "text": "Niger (+227)",
+          "selected": false
+        },
+        {
+          "value": "Nigeria (+234)",
+          "text": "Nigeria (+234)",
+          "selected": false
+        },
+        {
+          "value": "Niue (+683)",
+          "text": "Niue (+683)",
+          "selected": false
+        },
+        {
+          "value": "Norfolk Island (+672)",
+          "text": "Norfolk Island (+672)",
+          "selected": false
+        },
+        {
+          "value": "Northern Mariana Islands (+1)",
+          "text": "Northern Mariana Islands (+1)",
+          "selected": false
+        },
+        {
+          "value": "Norway (+47)",
+          "text": "Norway (+47)",
+          "selected": false
+        },
+        {
+          "value": "Pakistan (+92)",
+          "text": "Pakistan (+92)",
+          "selected": false
+        },
+        {
+          "value": "Palau (+680)",
+          "text": "Palau (+680)",
+          "selected": false
+        },
+        {
+          "value": "Palestinian Territory (+970)",
+          "text": "Palestinian Territory (+970)",
+          "selected": false
+        },
+        {
+          "value": "Panama (+507)",
+          "text": "Panama (+507)",
+          "selected": false
+        },
+        {
+          "value": "Papua New Guinea (+675)",
+          "text": "Papua New Guinea (+675)",
+          "selected": false
+        },
+        {
+          "value": "Paraguay (+595)",
+          "text": "Paraguay (+595)",
+          "selected": false
+        },
+        {
+          "value": "Peru (+51)",
+          "text": "Peru (+51)",
+          "selected": false
+        },
+        {
+          "value": "Philippines (+63)",
+          "text": "Philippines (+63)",
+          "selected": false
+        },
+        {
+          "value": "Pitcairn (+0)",
+          "text": "Pitcairn (+0)",
+          "selected": false
+        },
+        {
+          "value": "Poland (+48)",
+          "text": "Poland (+48)",
+          "selected": false
+        },
+        {
+          "value": "Portugal (+351)",
+          "text": "Portugal (+351)",
+          "selected": false
+        },
+        {
+          "value": "Puerto Rico (+1)",
+          "text": "Puerto Rico (+1)",
+          "selected": false
+        },
+        {
+          "value": "Qatar (+974)",
+          "text": "Qatar (+974)",
+          "selected": false
+        },
+        {
+          "value": "Reunion (+262)",
+          "text": "Reunion (+262)",
+          "selected": false
+        },
+        {
+          "value": "Romania (+40)",
+          "text": "Romania (+40)",
+          "selected": false
+        },
+        {
+          "value": "Russian Federation (+7)",
+          "text": "Russian Federation (+7)",
+          "selected": false
+        },
+        {
+          "value": "Rwanda (+250)",
+          "text": "Rwanda (+250)",
+          "selected": false
+        },
+        {
+          "value": "S. Georgia and S. Sandwich Islands (+0)",
+          "text": "S. Georgia and S. Sandwich Islands (+0)",
+          "selected": false
+        },
+        {
+          "value": "Saint Helena (+290)",
+          "text": "Saint Helena (+290)",
+          "selected": false
+        },
+        {
+          "value": "Saint Kitts and Nevis (+1)",
+          "text": "Saint Kitts and Nevis (+1)",
+          "selected": false
+        },
+        {
+          "value": "Saint Lucia (+1)",
+          "text": "Saint Lucia (+1)",
+          "selected": false
+        },
+        {
+          "value": "Saint Pierre and Miquelon (+508)",
+          "text": "Saint Pierre and Miquelon (+508)",
+          "selected": false
+        },
+        {
+          "value": "Saint Vincent and the Grenadines (+1)",
+          "text": "Saint Vincent and the Grenadines (+1)",
+          "selected": false
+        },
+        {
+          "value": "Samoa (+685)",
+          "text": "Samoa (+685)",
+          "selected": false
+        },
+        {
+          "value": "San Marino (+378)",
+          "text": "San Marino (+378)",
+          "selected": false
+        },
+        {
+          "value": "Sao Tome and Principe (+239)",
+          "text": "Sao Tome and Principe (+239)",
+          "selected": false
+        },
+        {
+          "value": "Saudi Arabia (+966)",
+          "text": "Saudi Arabia (+966)",
+          "selected": false
+        },
+        {
+          "value": "Senegal (+221)",
+          "text": "Senegal (+221)",
+          "selected": false
+        },
+        {
+          "value": "Serbia (+381)",
+          "text": "Serbia (+381)",
+          "selected": false
+        },
+        {
+          "value": "Serbia and Montenegro (+0)",
+          "text": "Serbia and Montenegro (+0)",
+          "selected": false
+        },
+        {
+          "value": "Seychelles (+248)",
+          "text": "Seychelles (+248)",
+          "selected": false
+        },
+        {
+          "value": "Sierra Leone (+232)",
+          "text": "Sierra Leone (+232)",
+          "selected": false
+        },
+        {
+          "value": "Singapore (+65)",
+          "text": "Singapore (+65)",
+          "selected": false
+        },
+        {
+          "value": "Slovak Republic (+421)",
+          "text": "Slovak Republic (+421)",
+          "selected": false
+        },
+        {
+          "value": "Slovenia (+386)",
+          "text": "Slovenia (+386)",
+          "selected": false
+        },
+        {
+          "value": "Solomon Islands (+677)",
+          "text": "Solomon Islands (+677)",
+          "selected": false
+        },
+        {
+          "value": "Somalia (+252)",
+          "text": "Somalia (+252)",
+          "selected": false
+        },
+        {
+          "value": "South Africa (+27)",
+          "text": "South Africa (+27)",
+          "selected": false
+        },
+        {
+          "value": "South Sudan (+211)",
+          "text": "South Sudan (+211)",
+          "selected": false
+        },
+        {
+          "value": "Spain (+34)",
+          "text": "Spain (+34)",
+          "selected": false
+        },
+        {
+          "value": "Sri Lanka (+94)",
+          "text": "Sri Lanka (+94)",
+          "selected": false
+        },
+        {
+          "value": "Sudan (+249)",
+          "text": "Sudan (+249)",
+          "selected": false
+        },
+        {
+          "value": "Sultanate of Oman (+968)",
+          "text": "Sultanate of Oman (+968)",
+          "selected": false
+        },
+        {
+          "value": "Suriname (+597)",
+          "text": "Suriname (+597)",
+          "selected": false
+        },
+        {
+          "value": "Svalbard and Jan Mayen (+47)",
+          "text": "Svalbard and Jan Mayen (+47)",
+          "selected": false
+        },
+        {
+          "value": "Swaziland (+268)",
+          "text": "Swaziland (+268)",
+          "selected": false
+        },
+        {
+          "value": "Sweden (+46)",
+          "text": "Sweden (+46)",
+          "selected": false
+        },
+        {
+          "value": "Switzerland (+41)",
+          "text": "Switzerland (+41)",
+          "selected": false
+        },
+        {
+          "value": "Syria (+963)",
+          "text": "Syria (+963)",
+          "selected": false
+        },
+        {
+          "value": "Taiwan (+886)",
+          "text": "Taiwan (+886)",
+          "selected": false
+        },
+        {
+          "value": "Tajikistan (+992)",
+          "text": "Tajikistan (+992)",
+          "selected": false
+        },
+        {
+          "value": "Tanzania (+255)",
+          "text": "Tanzania (+255)",
+          "selected": false
+        },
+        {
+          "value": "Thailand (+66)",
+          "text": "Thailand (+66)",
+          "selected": false
+        },
+        {
+          "value": "Timor-Leste (+670)",
+          "text": "Timor-Leste (+670)",
+          "selected": false
+        },
+        {
+          "value": "Togo (+228)",
+          "text": "Togo (+228)",
+          "selected": false
+        },
+        {
+          "value": "Tokelau (+690)",
+          "text": "Tokelau (+690)",
+          "selected": false
+        },
+        {
+          "value": "Tonga (+676)",
+          "text": "Tonga (+676)",
+          "selected": false
+        },
+        {
+          "value": "Trinidad and Tobago (+1)",
+          "text": "Trinidad and Tobago (+1)",
+          "selected": false
+        },
+        {
+          "value": "Tunisia (+216)",
+          "text": "Tunisia (+216)",
+          "selected": false
+        },
+        {
+          "value": "Turkey (+90)",
+          "text": "Turkey (+90)",
+          "selected": false
+        },
+        {
+          "value": "Turkmenistan (+993)",
+          "text": "Turkmenistan (+993)",
+          "selected": false
+        },
+        {
+          "value": "Turks and Caicos Islands (+1)",
+          "text": "Turks and Caicos Islands (+1)",
+          "selected": false
+        },
+        {
+          "value": "Tuvalu (+688)",
+          "text": "Tuvalu (+688)",
+          "selected": false
+        },
+        {
+          "value": "Uganda (+256)",
+          "text": "Uganda (+256)",
+          "selected": false
+        },
+        {
+          "value": "Ukraine (+380)",
+          "text": "Ukraine (+380)",
+          "selected": false
+        },
+        {
+          "value": "United Arab Emirates (+971)",
+          "text": "United Arab Emirates (+971)",
+          "selected": false
+        },
+        {
+          "value": "United Kingdom (+44)",
+          "text": "United Kingdom (+44)",
+          "selected": false
+        },
+        {
+          "value": "United States (+1)",
+          "text": "United States (+1)",
+          "selected": false
+        },
+        {
+          "value": "Uruguay (+598)",
+          "text": "Uruguay (+598)",
+          "selected": false
+        },
+        {
+          "value": "Uzbekistan (+998)",
+          "text": "Uzbekistan (+998)",
+          "selected": false
+        },
+        {
+          "value": "Vanuatu (+678)",
+          "text": "Vanuatu (+678)",
+          "selected": false
+        },
+        {
+          "value": "Vatican City State (Holy See) (+39)",
+          "text": "Vatican City State (Holy See) (+39)",
+          "selected": false
+        },
+        {
+          "value": "Venezuela (+58)",
+          "text": "Venezuela (+58)",
+          "selected": false
+        },
+        {
+          "value": "Vietnam (+84)",
+          "text": "Vietnam (+84)",
+          "selected": false
+        },
+        {
+          "value": "Virgin Islands (British) (+1)",
+          "text": "Virgin Islands (British) (+1)",
+          "selected": false
+        },
+        {
+          "value": "Virgin Islands (U.S.) (+1)",
+          "text": "Virgin Islands (U.S.) (+1)",
+          "selected": false
+        },
+        {
+          "value": "Wallis and Futuna (+681)",
+          "text": "Wallis and Futuna (+681)",
+          "selected": false
+        },
+        {
+          "value": "Western Sahara (+212)",
+          "text": "Western Sahara (+212)",
+          "selected": false
+        },
+        {
+          "value": "Yemen (+967)",
+          "text": "Yemen (+967)",
+          "selected": false
+        },
+        {
+          "value": "Zambia (+260)",
+          "text": "Zambia (+260)",
+          "selected": false
+        },
+        {
+          "value": "Zimbabwe (+263)",
+          "text": "Zimbabwe (+263)",
+          "selected": false
+        }
+      ],
+      "defaultValue": "Israel (+972)"
+    },
+    {
+      "placeholderIncludes": "Email address",
+      "count": 1,
+      "options": [
+        {
+          "value": "Select an option",
+          "text": "Select an option",
+          "selected": false
+        },
+        {
+          "value": "iliyabrook1987@gmail.com",
+          "text": "iliyabrook1987@gmail.com",
+          "selected": true
+        }
+      ],
+      "defaultValue": "iliyabrook1987@gmail.com"
     }
   ]
 }
