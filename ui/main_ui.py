@@ -14,6 +14,7 @@ FILTERS_FILE = os.path.join(DB_DIR, "user_filters.json")
 AUTOFILL_FILE = os.path.join(DB_DIR, "form_autofill.json")
 BROWSER_FILE = os.path.join(DB_DIR, "browser_settings.json")
 
+
 class MainUI:
     def __init__(self, root):
         self.root = root
@@ -39,16 +40,18 @@ class MainUI:
         btn_frame = ttk.Frame(self.root)
         btn_frame.pack(pady=10)
 
-        self.open_browser_btn = ttk.Button(btn_frame, text="Open Browser", command=self.toggle_browser)
+        self.open_browser_btn = ttk.Button(
+            btn_frame, text="Open Browser", command=self.toggle_browser
+        )
         self.open_browser_btn.pack(side="left", padx=5)
 
         self.start_btn = ttk.Button(
-            btn_frame, 
-            text="Start", 
-            command=self.toggle_bot, 
+            btn_frame,
+            text="Start",
+            command=self.toggle_bot,
             # disable for now
             # state="disabled"
-            )
+        )
         self.start_btn.pack(side="left", padx=5)
 
     def start_browser_on_launch(self):
@@ -60,7 +63,10 @@ class MainUI:
         try:
             self.browser.start_browser()
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to start browser: {e}"))
+            self.root.after(
+                0,
+                lambda: messagebox.showerror("Error", f"Failed to start browser: {e}"),
+            )
 
     def toggle_browser(self):
         if not self.browser_open:
@@ -78,7 +84,9 @@ class MainUI:
             self.browser.start_browser()
             self.root.after(0, self.on_browser_opened)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to open browser: {e}"))
+            self.root.after(
+                0, lambda: messagebox.showerror("Error", f"Failed to open browser: {e}")
+            )
 
     def on_browser_opened(self):
         self.browser_open = True
@@ -95,7 +103,10 @@ class MainUI:
             self.browser.stop()
             self.root.after(0, self.on_browser_closed)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to close browser: {e}"))
+            self.root.after(
+                0,
+                lambda: messagebox.showerror("Error", f"Failed to close browser: {e}"),
+            )
 
     def on_browser_closed(self):
         self.browser_open = False
@@ -104,7 +115,7 @@ class MainUI:
             # disable for now
             # state="disabled"
             state="normal"
-            )
+        )
         self.is_running = False
         self.start_btn.config(text="Start")
 
@@ -127,14 +138,18 @@ class MainUI:
     def _run_bot(self):
         try:
             if not self.browser.driver:
-                self.root.after(0, lambda: messagebox.showerror("Error", "Browser is not open."))
+                self.root.after(
+                    0, lambda: messagebox.showerror("Error", "Browser is not open.")
+                )
                 self.is_running = False
                 self.bot_should_run = False
                 self.root.after(0, lambda: self.start_btn.config(text="Start"))
                 return
             current_url = self.browser.driver.current_url
             if "linkedin.com/jobs" in current_url:
-                self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run)
+                self.browser.process_job_listings(
+                    AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run
+                )
             else:
                 with open(FILTERS_FILE, "r", encoding="utf-8") as f:
                     filters = json.load(f)
@@ -154,10 +169,14 @@ class MainUI:
                     params.append("f_TPR=r2592000")
                 job_apply_url = base_url + "&".join(params)
                 self.browser.go_to_url(job_apply_url)
-                self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run)
+                self.browser.process_job_listings(
+                    AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run
+                )
             self.root.after(0, self.on_bot_stopped)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to run bot: {e}"))
+            self.root.after(
+                0, lambda: messagebox.showerror("Error", f"Failed to run bot: {e}")
+            )
             self.root.after(0, self.on_bot_stopped)
 
     def on_bot_stopped(self):
@@ -165,7 +184,8 @@ class MainUI:
         self.bot_should_run = False
         self.start_btn.config(text="Start")
 
+
 def run():
     root = ThemedTk(theme="arc")
     app = MainUI(root)
-    root.mainloop() 
+    root.mainloop()

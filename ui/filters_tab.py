@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import json
 import os
 
+
 class FiltersTab:
     def __init__(self, parent, filters_file):
         self.frame = ttk.Frame(parent)
@@ -15,34 +16,61 @@ class FiltersTab:
         self.create_widgets()
         self.load_filters()
         self.update_job_apply_url()
- 
+
     def create_widgets(self):
         inputMinHeight = 5
         ttk.Label(self.frame, text="Bad Words (comma separated)").pack(anchor="w")
-        self.badWords_entry = tk.Text(self.frame, height=inputMinHeight, width=60, wrap="word")
+        self.badWords_entry = tk.Text(
+            self.frame, height=inputMinHeight, width=60, wrap="word"
+        )
         self.badWords_entry.pack(fill="x")
-        self.badWords_entry.bind("<KeyRelease>", lambda e: self._auto_resize(self.badWords_entry))
+        self.badWords_entry.bind(
+            "<KeyRelease>", lambda e: self._auto_resize(self.badWords_entry)
+        )
 
-        ttk.Label(self.frame, text="Title Filter Words (comma separated)").pack(anchor="w")
-        self.titleFilterWords_entry = tk.Text(self.frame, height=inputMinHeight, width=60, wrap="word")
+        ttk.Label(self.frame, text="Title Filter Words (comma separated)").pack(
+            anchor="w"
+        )
+        self.titleFilterWords_entry = tk.Text(
+            self.frame, height=inputMinHeight, width=60, wrap="word"
+        )
         self.titleFilterWords_entry.pack(fill="x")
-        self.titleFilterWords_entry.bind("<KeyRelease>", lambda e: self._auto_resize(self.titleFilterWords_entry))
+        self.titleFilterWords_entry.bind(
+            "<KeyRelease>", lambda e: self._auto_resize(self.titleFilterWords_entry)
+        )
 
-        ttk.Label(self.frame, text="Title Skip Words (comma separated)").pack(anchor="w")
-        self.titleSkipWords_entry = tk.Text(self.frame, height=inputMinHeight, width=60, wrap="word")
+        ttk.Label(self.frame, text="Title Skip Words (comma separated)").pack(
+            anchor="w"
+        )
+        self.titleSkipWords_entry = tk.Text(
+            self.frame, height=inputMinHeight, width=60, wrap="word"
+        )
         self.titleSkipWords_entry.pack(fill="x")
-        self.titleSkipWords_entry.bind("<KeyRelease>", lambda e: self._auto_resize(self.titleSkipWords_entry))
+        self.titleSkipWords_entry.bind(
+            "<KeyRelease>", lambda e: self._auto_resize(self.titleSkipWords_entry)
+        )
 
         ttk.Label(self.frame, text="Time Filter").pack(anchor="w")
-        self.timeFilter_combo = ttk.Combobox(self.frame, textvariable=self.timeFilter_var, state="readonly", width=30)
-        self.timeFilter_combo['values'] = ("Any Time", "Past 24 hours", "Past Week", "Past Month")
+        self.timeFilter_combo = ttk.Combobox(
+            self.frame, textvariable=self.timeFilter_var, state="readonly", width=30
+        )
+        self.timeFilter_combo["values"] = (
+            "Any Time",
+            "Past 24 hours",
+            "Past Week",
+            "Past Month",
+        )
         self.timeFilter_combo.pack(fill="x")
-        self.timeFilter_combo.bind("<<ComboboxSelected>>", lambda e: self.on_time_filter_change())
+        self.timeFilter_combo.bind(
+            "<<ComboboxSelected>>", lambda e: self.on_time_filter_change()
+        )
 
-        ttk.Button(self.frame, text="Save Filters", command=self.save_filters).pack(pady=5)
+        ttk.Button(self.frame, text="Save Filters", command=self.save_filters).pack(
+            pady=5
+        )
 
     def _auto_resize(self, text_widget):
-        lines = int(text_widget.index('end-1c').split('.')[0])
+        lines = int(text_widget.index("end-1c").split(".")[0])
         text_widget.config(height=max(4, min(lines, 10)))
 
     def load_filters(self):
@@ -52,19 +80,37 @@ class FiltersTab:
             self.badWords_entry.delete("1.0", tk.END)
             self.badWords_entry.insert("1.0", ", ".join(data.get("badWords", [])))
             self.titleFilterWords_entry.delete("1.0", tk.END)
-            self.titleFilterWords_entry.insert("1.0", ", ".join(data.get("titleFilterWords", [])))
+            self.titleFilterWords_entry.insert(
+                "1.0", ", ".join(data.get("titleFilterWords", []))
+            )
             self.titleSkipWords_entry.delete("1.0", tk.END)
-            self.titleSkipWords_entry.insert("1.0", ", ".join(data.get("titleSkipWords", [])))
-            self.timeFilter_var.set(self.time_filter_label(data.get("timeFilter", "any")))
+            self.titleSkipWords_entry.insert(
+                "1.0", ", ".join(data.get("titleSkipWords", []))
+            )
+            self.timeFilter_var.set(
+                self.time_filter_label(data.get("timeFilter", "any"))
+            )
         except Exception:
             self.timeFilter_var.set("Any Time")
 
     def save_filters(self):
         data = {
-            "badWords": [w.strip() for w in self.badWords_entry.get("1.0", tk.END).split(",") if w.strip()],
-            "titleFilterWords": [w.strip() for w in self.titleFilterWords_entry.get("1.0", tk.END).split(",") if w.strip()],
-            "titleSkipWords": [w.strip() for w in self.titleSkipWords_entry.get("1.0", tk.END).split(",") if w.strip()],
-            "timeFilter": self.time_filter_code(self.timeFilter_var.get())
+            "badWords": [
+                w.strip()
+                for w in self.badWords_entry.get("1.0", tk.END).split(",")
+                if w.strip()
+            ],
+            "titleFilterWords": [
+                w.strip()
+                for w in self.titleFilterWords_entry.get("1.0", tk.END).split(",")
+                if w.strip()
+            ],
+            "titleSkipWords": [
+                w.strip()
+                for w in self.titleSkipWords_entry.get("1.0", tk.END).split(",")
+                if w.strip()
+            ],
+            "timeFilter": self.time_filter_code(self.timeFilter_var.get()),
         }
         try:
             with open(self.filters_file, "w", encoding="utf-8") as f:
@@ -114,4 +160,4 @@ class FiltersTab:
             return "Past Week"
         elif code == "r2592000":
             return "Past Month"
-        return "Any Time" 
+        return "Any Time"

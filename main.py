@@ -11,4 +11,4 @@ AUTOFILL_FILE = os.path.join(DB_DIR, "form_autofill.json")
 BROWSER_FILE = os.path.join(DB_DIR, "browser_settings.json")
 
 if __name__ == "__main__":
-    run() 
+    run()
