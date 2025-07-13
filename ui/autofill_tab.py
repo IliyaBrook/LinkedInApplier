@@ -28,20 +28,45 @@ class AutofillTab:
                 command=lambda s=section: self.toggle_section(s),
             )
             btn.pack(anchor="w", pady=(2, 0))
-            content = ttk.Frame(frame)
+            # --- SCROLLABLE SECTION ---
+            canvas = tk.Canvas(frame, height=400, highlightthickness=0)
+            vsb = ttk.Scrollbar(frame, orient="vertical", command=canvas.yview)
+            content = ttk.Frame(canvas)
+            content_id = canvas.create_window((0, 0), window=content, anchor="nw")
+            canvas.configure(yscrollcommand=vsb.set)
+
+            def _on_frame_configure(event, c=canvas, f=content):
+                c.configure(scrollregion=c.bbox("all"))
+
+            content.bind("<Configure>", _on_frame_configure)
+
+            def _on_mousewheel(event, c=canvas):
+                c.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+            content.bind_all("<MouseWheel>", _on_mousewheel)
+            canvas.pack(side="left", fill="x", expand=True)
+            vsb.pack(side="right", fill="y")
+            canvas.pack_forget()
+            vsb.pack_forget()
             self.autofill_sections[section] = content
             self.autofill_section_frames[section] = frame
             self.autofill_section_states[section] = False
+            self.autofill_sections[section + "_canvas"] = canvas
+            self.autofill_sections[section + "_vsb"] = vsb
         ttk.Button(self.frame, text="Save Autofill", command=self.save_autofill).pack(
             pady=5
         )
 
     def toggle_section(self, section):
         state = self.autofill_section_states[section]
+        canvas = self.autofill_sections[section + "_canvas"]
+        vsb = self.autofill_sections[section + "_vsb"]
         if state:
-            self.autofill_sections[section].pack_forget()
+            canvas.pack_forget()
+            vsb.pack_forget()
         else:
-            self.autofill_sections[section].pack(fill="x", padx=10, pady=(0, 2))
+            canvas.pack(side="left", fill="x", expand=True)
+            vsb.pack(side="right", fill="y")
         self.autofill_section_states[section] = not state
 
     def load_autofill(self):
@@ -56,9 +81,7 @@ class AutofillTab:
                 label = ttk.Label(self.autofill_sections["textInput"], text=key)
                 label.pack(anchor="w", padx=5, pady=(4, 0))
                 entry = ttk.Entry(
-                    self.autofill_sections["textInput"],
-                    textvariable=var,
-                    width=40,
+                    self.autofill_sections["textInput"], textvariable=var, width=40
                 )
                 entry.pack(anchor="w", padx=5, pady=(0, 2))
                 del_btn = ttk.Button(

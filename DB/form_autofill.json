@@ -8,7 +8,10 @@
     "Phone": "0549303336",
     "Mobile phone number": "0549303336",
     "How many years of work experience do you have with Node.js?": "4",
-    "How many years of work experience do you have with Next.js?": "3"
+    "How many years of work experience do you have with Next.js?": "3",
+    "First name": "Iliya",
+    "Last name": "Brook",
+    "City": ""
   },
   "radioButtons": [
     {
@@ -77,7 +80,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 5,
+      "count": 6,
       "options": [
         {
           "value": "Select an option",
@@ -1324,7 +1327,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 3,
+      "count": 4,
       "options": [
         {
           "value": "Select an option",

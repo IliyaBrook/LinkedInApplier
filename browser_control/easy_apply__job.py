@@ -339,6 +339,23 @@ def apply_to_job(driver, autofill_data):
             close_btn.click()
         except Exception:
             pass
+        # After submit, close 'Application sent' modal if it appears
+        try:
+            post_apply_modal = driver.find_element(
+                By.XPATH,
+                "//div[@role='dialog' and .//h2[@id='post-apply-modal' and contains(text(), 'Application sent')]]",
+            )
+            try:
+                done_btn = post_apply_modal.find_element(
+                    By.XPATH, ".//button[.//span[contains(text(), 'Done')]]"
+                )
+                if done_btn.is_displayed() and done_btn.is_enabled():
+                    done_btn.click()
+                    time.sleep(1)
+            except Exception:
+                pass
+        except Exception:
+            pass
     except Exception as e:
         print("Error in apply_to_job:", e)
         return False
