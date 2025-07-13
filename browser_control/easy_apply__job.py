@@ -72,7 +72,6 @@ def apply_to_job(driver, autofill_data):
                     })
                     if radio.is_selected():
                         selected_value = radio.get_attribute("value")
-                # Сохраняем в базе
                 if "radioButtons" not in autofill_data:
                     autofill_data["radioButtons"] = []
                 found = next((rb for rb in autofill_data["radioButtons"] if rb["placeholderIncludes"] == label), None)
@@ -86,7 +85,6 @@ def apply_to_job(driver, autofill_data):
                     })
                     updated = True
                 else:
-                    # обновить опции если появились новые
                     found["options"] = options
                     if selected_value:
                         found["defaultValue"] = selected_value

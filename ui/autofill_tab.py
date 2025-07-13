@@ -42,7 +42,6 @@ class AutofillTab:
         try:
             with open(self.autofill_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            # inputFieldConfigs (старый способ)
             for key, value in data.get("inputFieldConfigs", {}).items():
                 var = tk.StringVar(value=value)
                 label = ttk.Label(self.autofill_sections["inputFieldConfigs"], text=key)
@@ -50,7 +49,6 @@ class AutofillTab:
                 entry = ttk.Entry(self.autofill_sections["inputFieldConfigs"], textvariable=var, width=40)
                 entry.pack(anchor="w", padx=5, pady=(0,2))
                 self.input_fields[key] = var
-            # radioButtons (новый способ)
             for rb in data.get("radioButtons", []):
                 label_text = rb.get("placeholderIncludes", "")
                 count = rb.get("count", None)
@@ -62,10 +60,8 @@ class AutofillTab:
                 self.radio_fields[rb.get("placeholderIncludes", "")] = var
                 for opt in rb.get("options", []):
                     ttk.Radiobutton(self.autofill_sections["radioButtons"], text=opt["text"], value=opt["value"], variable=var).pack(anchor="w", padx=20)
-                # Кнопка удаления
                 del_btn = ttk.Button(self.autofill_sections["radioButtons"], text="Delete", command=lambda l=rb.get("placeholderIncludes", ""): self.delete_radio(l))
                 del_btn.pack(anchor="w", padx=20, pady=(0,4))
-            # dropdowns (новый способ)
             for dd in data.get("dropdowns", []):
                 label_text = dd.get("placeholderIncludes", "")
                 count = dd.get("count", None)
@@ -80,7 +76,6 @@ class AutofillTab:
                 combo = ttk.Combobox(self.autofill_sections["dropdowns"], textvariable=var, values=values, state="readonly")
                 combo.pack(anchor="w", padx=20)
                 combo.value_map = value_map
-                # Кнопка удаления
                 del_btn = ttk.Button(self.autofill_sections["dropdowns"], text="Delete", command=lambda l=dd.get("placeholderIncludes", ""): self.delete_dropdown(l))
                 del_btn.pack(anchor="w", padx=20, pady=(0,4))
         except Exception:
@@ -94,7 +89,6 @@ class AutofillTab:
         }
         # radioButtons
         for label, var in self.radio_fields.items():
-            # Найти объект radioButton по label
             rb = None
             try:
                 with open(self.autofill_file, "r", encoding="utf-8") as f:

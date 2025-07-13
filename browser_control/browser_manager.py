@@ -92,10 +92,8 @@ class BrowserManager:
                         subtitle = job_card.find_element(By.CSS_SELECTOR, '[class*="subtitle"]').text.strip().lower()
                     except Exception:
                         pass
-                    # Проверка titleSkipWords по целым словам
                     if any(re.search(r'\b' + re.escape(skip) + r'\b', job_title) or re.search(r'\b' + re.escape(skip) + r'\b', subtitle) for skip in title_skip_words):
                         continue
-                    # Проверка titleFilterWords по целым словам
                     if title_filter_words and not any(re.search(r'\b' + re.escape(f) + r'\b', job_title) for f in title_filter_words):
                         continue
                     filtered_jobs.append((job_card, job_title_el))
@@ -112,7 +110,6 @@ class BrowserManager:
                     time.sleep(2)
                     try:
                         job_details = self.driver.find_element(By.CSS_SELECTOR, '[class*="jobs-box__html-content"]').text.lower()
-                        # Проверка badWords по целым словам
                         if any(re.search(r'\b' + re.escape(bad) + r'\b', job_details) for bad in bad_words):
                             continue
                     except Exception:
