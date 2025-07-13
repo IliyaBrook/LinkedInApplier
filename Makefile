@@ -5,3 +5,6 @@ install:
 dev:
 	# python run_with_reload.py
 	debugpy --listen 5678 run_with_reload.py
+
+format:
+	black .
