@@ -3,4 +3,5 @@ install:
 	pip install watchdog
 
 dev:
-	python run_with_reload.py
+	# python run_with_reload.py
+	debugpy --listen 5678 run_with_reload.py
