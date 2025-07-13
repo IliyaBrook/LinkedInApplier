@@ -40,20 +40,56 @@ def apply_to_job(driver, autofill_data):
                     or field.get_attribute("placeholder")
                 )
                 value = field.get_attribute("value")
+                db_section = "textInput"
+                # --- CHECKBOXS ---
+                if tag == "input" and type_ == "checkbox":
+                    if not field.is_selected():
+                        try:
+                            field.click()
+                        except Exception:
+                            pass
+                    continue
+                # --- TEXT INPUTS ---
                 if tag == "input" and type_ in ("text", "email", "tel"):
-                    db_section = "inputFieldConfigs"
-                    val = autofill_data.get(db_section, {}).get(name, "")
-                    if val:
+                    autofill_section = autofill_data.get(db_section, {})
+                    autofill_val = autofill_section.get(name, None)
+                    # If no name/aria-label/placeholder, try to find label by for
+                    if not name:
+                        field_id = field.get_attribute("id")
+                        label_text = None
+                        if field_id:
+                            try:
+                                label_el = form.find_element(
+                                    By.CSS_SELECTOR, f'label[for="{field_id}"]'
+                                )
+                                span = None
+                                try:
+                                    span = label_el.find_element(
+                                        By.CSS_SELECTOR, 'span[aria-hidden="true"]'
+                                    )
+                                except Exception:
+                                    pass
+                                label_text = (
+                                    span.text.strip() if span else label_el.text.strip()
+                                )
+                            except Exception:
+                                pass
+                        if label_text:
+                            name = label_text
+                    autofill_val = autofill_section.get(name, None)
+                    if autofill_val is not None and value == autofill_val:
+                        continue
+                    if autofill_val:
                         try:
                             field.clear()
                         except Exception:
                             pass
-                        field.send_keys(val)
+                        field.send_keys(autofill_val)
                     else:
                         if db_section not in autofill_data:
                             autofill_data[db_section] = {}
                         if name and name not in autofill_data[db_section]:
-                            autofill_data[db_section][name] = ""
+                            autofill_data[db_section][name] = value or ""
                             updated = True
             # --- RADIO BUTTONS ---
             radio_fieldsets = form.find_elements(
@@ -103,11 +139,24 @@ def apply_to_job(driver, autofill_data):
                     (
                         rb
                         for rb in autofill_data["radioButtons"]
-                        if rb["placeholderIncludes"] == label
+                        if rb["placeholderIncludes"].strip().lower()
+                        == label.strip().lower()
                     ),
                     None,
                 )
-                if not found:
+                if found:
+                    # Don't update if options and defaultValue match
+                    same_options = found["options"] == options
+                    same_default = found.get("defaultValue", None) == selected_value
+                    if same_options and same_default:
+                        found["count"] += 1
+                        continue
+                    found["options"] = options
+                    if selected_value:
+                        found["defaultValue"] = selected_value
+                    found["count"] += 1
+                    updated = True
+                else:
                     autofill_data["radioButtons"].append(
                         {
                             "placeholderIncludes": label,
@@ -119,11 +168,6 @@ def apply_to_job(driver, autofill_data):
                         }
                     )
                     updated = True
-                else:
-                    found["options"] = options
-                    if selected_value:
-                        found["defaultValue"] = selected_value
-                    found["count"] += 1
             # --- DROPDOWNS ---
             selects = form.find_elements(By.TAG_NAME, "select")
             for select in selects:
@@ -166,11 +210,23 @@ def apply_to_job(driver, autofill_data):
                     (
                         d
                         for d in autofill_data["dropdowns"]
-                        if d["placeholderIncludes"] == label
+                        if d["placeholderIncludes"].strip().lower()
+                        == label.strip().lower()
                     ),
                     None,
                 )
-                if not found:
+                if found:
+                    # Do not update if options and defaultValue match
+                    same_options = found["options"] == options
+                    same_default = found.get("defaultValue", None) == selected_value
+                    if same_options and same_default:
+                        found["count"] += 1
+                        continue
+                    found["options"] = options
+                    found["defaultValue"] = selected_value
+                    found["count"] += 1
+                    updated = True
+                else:
                     autofill_data["dropdowns"].append(
                         {
                             "placeholderIncludes": label,
@@ -180,10 +236,6 @@ def apply_to_job(driver, autofill_data):
                         }
                     )
                     updated = True
-                else:
-                    found["options"] = options
-                    found["defaultValue"] = selected_value
-                    found["count"] += 1
             if updated:
                 with open("DB/form_autofill.json", "w", encoding="utf-8") as f:
                     json.dump(autofill_data, f, ensure_ascii=False, indent=2)
@@ -201,6 +253,42 @@ def apply_to_job(driver, autofill_data):
                 )
                 next_btn.click()
                 time.sleep(2)
+                try:
+                    submit_btn = form.find_element(
+                        By.XPATH,
+                        ".//button[contains(@aria-label, 'Submit application') or contains(., 'Submit application')]",
+                    )
+                    if submit_btn.is_displayed() and submit_btn.is_enabled():
+                        driver.execute_script(
+                            "arguments[0].scrollIntoView({block: 'center'});",
+                            submit_btn,
+                        )
+                        submit_btn.click()
+                        time.sleep(2)
+                except Exception:
+                    pass
+                try:
+                    modal = driver.find_element(
+                        By.XPATH,
+                        "//div[contains(@role, 'alertdialog') and .//h2[contains(text(), 'Save this application?')]]",
+                    )
+                    try:
+                        discard_btn = modal.find_element(
+                            By.XPATH, ".//button[contains(., 'Discard')]"
+                        )
+                        discard_btn.click()
+                        time.sleep(1)
+                    except Exception:
+                        try:
+                            dismiss_btn = modal.find_element(
+                                By.CSS_SELECTOR, ".artdeco-modal__dismiss"
+                            )
+                            dismiss_btn.click()
+                            time.sleep(1)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
             else:
                 break
         try:

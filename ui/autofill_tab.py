@@ -13,11 +13,12 @@ class AutofillTab:
         self.autofill_sections = {}
         self.autofill_section_frames = {}
         self.autofill_section_states = {}
+        self.dropdown_value_maps = {}
         self.create_widgets()
         self.load_autofill()
 
     def create_widgets(self):
-        for section in ["inputFieldConfigs", "radioButtons", "dropdowns"]:
+        for section in ["textInput", "radioButtons", "dropdowns"]:
             frame = ttk.Frame(self.frame)
             frame.pack(fill="x", padx=5, pady=2)
             btn = ttk.Button(
@@ -44,22 +45,28 @@ class AutofillTab:
         self.autofill_section_states[section] = not state
 
     def load_autofill(self):
-        for section in ["inputFieldConfigs", "radioButtons", "dropdowns"]:
+        for section in ["textInput", "radioButtons", "dropdowns"]:
             for widget in self.autofill_sections[section].winfo_children():
                 widget.destroy()
         try:
             with open(self.autofill_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            for key, value in data.get("inputFieldConfigs", {}).items():
+            for key, value in data.get("textInput", {}).items():
                 var = tk.StringVar(value=value)
-                label = ttk.Label(self.autofill_sections["inputFieldConfigs"], text=key)
+                label = ttk.Label(self.autofill_sections["textInput"], text=key)
                 label.pack(anchor="w", padx=5, pady=(4, 0))
                 entry = ttk.Entry(
-                    self.autofill_sections["inputFieldConfigs"],
+                    self.autofill_sections["textInput"],
                     textvariable=var,
                     width=40,
                 )
                 entry.pack(anchor="w", padx=5, pady=(0, 2))
+                del_btn = ttk.Button(
+                    self.autofill_sections["textInput"],
+                    text="Delete",
+                    command=lambda l=key: self.delete_textinput(l),
+                )
+                del_btn.pack(anchor="w", padx=20, pady=(0, 4))
                 self.input_fields[key] = var
             for rb in data.get("radioButtons", []):
                 label_text = rb.get("placeholderIncludes", "")
@@ -105,7 +112,7 @@ class AutofillTab:
                     state="readonly",
                 )
                 combo.pack(anchor="w", padx=20)
-                combo.value_map = value_map
+                self.dropdown_value_maps[label_text] = value_map
                 del_btn = ttk.Button(
                     self.autofill_sections["dropdowns"],
                     text="Delete",
@@ -119,7 +126,7 @@ class AutofillTab:
 
     def save_autofill(self):
         data = {
-            "inputFieldConfigs": {k: v.get() for k, v in self.input_fields.items()},
+            "textInput": {k: v.get() for k, v in self.input_fields.items()},
             "radioButtons": [],
             "dropdowns": [],
         }
@@ -194,6 +201,19 @@ class AutofillTab:
                 for dd in data.get("dropdowns", [])
                 if dd.get("placeholderIncludes", "") != label
             ]
+            with open(self.autofill_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            self.load_autofill()
+        except Exception:
+            pass
+
+    def delete_textinput(self, label):
+        if label in self.input_fields:
+            del self.input_fields[label]
+        try:
+            with open(self.autofill_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            data["textInput"].pop(label, None)
             with open(self.autofill_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             self.load_autofill()

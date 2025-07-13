@@ -2,18 +2,11 @@
   "badWords": [
     "laravel",
     "ruby",
-    "django",
-    "flask",
     "c#",
     "rust",
     "c++",
-    "angular",
-    "angularjs",
-    "vue.js",
-    "flutter",
     "unity",
     "unreal engine",
-    "angular.js",
     "spring boot",
     "spring framework"
   ],
@@ -40,19 +33,14 @@
     "tech lead",
     "software",
     "leader",
-    "algorithm",
     "backend oriented",
-    "wordpress",
     "designer",
     "S.r",
-    "qa",
-    "data",
-    "cloud",
-    "system",
     "rust",
     "low-level",
     "Marketing",
     "Staff"
   ],
-  "timeFilter": "any"
+  "timeFilter": "r86400",
+  "easyApplyOnly": true
 }

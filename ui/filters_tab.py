@@ -65,6 +65,12 @@ class FiltersTab:
             "<<ComboboxSelected>>", lambda e: self.on_time_filter_change()
         )
 
+        self.easy_apply_var = tk.BooleanVar(value=False)
+        self.easy_apply_checkbox = ttk.Checkbutton(
+            self.frame, text="Easy apply only", variable=self.easy_apply_var
+        )
+        self.easy_apply_checkbox.pack(anchor="w", pady=5)
+
         ttk.Button(self.frame, text="Save Filters", command=self.save_filters).pack(
             pady=5
         )
@@ -90,8 +96,10 @@ class FiltersTab:
             self.timeFilter_var.set(
                 self.time_filter_label(data.get("timeFilter", "any"))
             )
+            self.easy_apply_var.set(data.get("easyApplyOnly", False))
         except Exception:
             self.timeFilter_var.set("Any Time")
+            self.easy_apply_var.set(False)
 
     def save_filters(self):
         data = {
@@ -111,6 +119,7 @@ class FiltersTab:
                 if w.strip()
             ],
             "timeFilter": self.time_filter_code(self.timeFilter_var.get()),
+            "easyApplyOnly": self.easy_apply_var.get(),
         }
         try:
             with open(self.filters_file, "w", encoding="utf-8") as f:
@@ -127,7 +136,7 @@ class FiltersTab:
         try:
             with open("DB/form_autofill.json", "r", encoding="utf-8") as f:
                 autofill = json.load(f)
-            job_title = autofill.get("inputFieldConfigs", {}).get("jobTitle", "")
+            job_title = autofill.get("textInput", {}).get("jobTitle", "")
         except Exception:
             job_title = ""
         time_code = self.time_filter_code(self.timeFilter_var.get())
@@ -141,6 +150,8 @@ class FiltersTab:
             params.append("f_TPR=r604800")
         elif time_code == "r2592000":
             params.append("f_TPR=r2592000")
+        if self.easy_apply_var.get():
+            params.append("f_AL=true")
         url = base_url + "&".join(params)
         self.job_apply_url = url
 
