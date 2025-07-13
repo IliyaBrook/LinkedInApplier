@@ -32,7 +32,7 @@ class AutofillTab:
             canvas = tk.Canvas(frame, height=400, highlightthickness=0)
             vsb = ttk.Scrollbar(frame, orient="vertical", command=canvas.yview)
             content = ttk.Frame(canvas)
-            content_id = canvas.create_window((0, 0), window=content, anchor="nw")
+            canvas.create_window((0, 0), window=content, anchor="nw")
             canvas.configure(yscrollcommand=vsb.set)
 
             def _on_frame_configure(event, c=canvas, f=content):
@@ -86,17 +86,18 @@ class AutofillTab:
             for key, value in data.get("textInput", {}).items():
                 var = tk.StringVar(value=value)
                 label = ttk.Label(self.autofill_sections["textInput"], text=key)
-                label.pack(anchor="w", padx=5, pady=(4, 0))
-                entry = ttk.Entry(
-                    self.autofill_sections["textInput"], textvariable=var, width=40
-                )
-                entry.pack(anchor="w", padx=5, pady=(0, 2))
+                label.pack(anchor="w", padx=5, pady=(8, 0))
+                row = ttk.Frame(self.autofill_sections["textInput"])
+                entry = ttk.Entry(row, textvariable=var, width=30)
                 del_btn = ttk.Button(
-                    self.autofill_sections["textInput"],
+                    row,
                     text="Delete",
                     command=lambda l=key: self.delete_textinput(l),
+                    width=8,
                 )
-                del_btn.pack(anchor="w", padx=20, pady=(0, 4))
+                entry.pack(side="left", padx=(0, 2), pady=4)
+                del_btn.pack(side="left", padx=(8, 5), pady=4)
+                row.pack(fill="x", padx=10, pady=0)
                 self.input_fields[key] = var
             for rb in data.get("radioButtons", []):
                 label_text = rb.get("placeholderIncludes", "")
@@ -131,26 +132,26 @@ class AutofillTab:
                     label_text = f"{label_text} (count: {count})"
                 label = ttk.Label(self.autofill_sections["dropdowns"], text=label_text)
                 label.pack(anchor="w", padx=5, pady=(8, 0))
+                row = ttk.Frame(self.autofill_sections["dropdowns"])
                 var = tk.StringVar(value=dd.get("defaultValue", ""))
                 self.dropdown_fields[dd.get("placeholderIncludes", "")] = var
                 values = [opt["text"] for opt in dd.get("options", [])]
                 value_map = {opt["text"]: opt["value"] for opt in dd.get("options", [])}
                 combo = ttk.Combobox(
-                    self.autofill_sections["dropdowns"],
-                    textvariable=var,
-                    values=values,
-                    state="readonly",
+                    row, textvariable=var, values=values, state="readonly", width=28
                 )
-                combo.pack(anchor="w", padx=20)
                 self.dropdown_value_maps[label_text] = value_map
                 del_btn = ttk.Button(
-                    self.autofill_sections["dropdowns"],
+                    row,
                     text="Delete",
                     command=lambda l=dd.get(
                         "placeholderIncludes", ""
                     ): self.delete_dropdown(l),
+                    width=8,
                 )
-                del_btn.pack(anchor="w", padx=20, pady=(0, 4))
+                combo.pack(side="left", padx=(0, 2), pady=8)
+                del_btn.pack(side="left", padx=(8, 5), pady=8)
+                row.pack(fill="x", padx=10, pady=0)
         except Exception:
             pass
 
