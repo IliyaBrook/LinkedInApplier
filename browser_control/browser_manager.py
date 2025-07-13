@@ -91,6 +91,15 @@ class BrowserManager:
                     print("Bot stopped by user during filtering.")
                     return
                 try:
+                    # Пропускать вакансии, если уже подано (есть текст 'Applied')
+                    try:
+                        applied_footer = job_card.find_element(
+                            By.CSS_SELECTOR, ".job-card-container__footer-job-state"
+                        )
+                        if "applied" in applied_footer.text.strip().lower():
+                            continue
+                    except Exception:
+                        pass
                     try:
                         job_title_el = job_card.find_element(
                             By.CSS_SELECTOR,

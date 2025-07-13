@@ -6,7 +6,9 @@
     "phone": "0549303336",
     "jobTitle": "Full Stack Developer",
     "Phone": "0549303336",
-    "Mobile phone number": "0549303336"
+    "Mobile phone number": "0549303336",
+    "How many years of work experience do you have with Node.js?": "4",
+    "How many years of work experience do you have with Next.js?": "3"
   },
   "radioButtons": [
     {
@@ -75,7 +77,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 4,
+      "count": 5,
       "options": [
         {
           "value": "Select an option",
@@ -1322,7 +1324,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 2,
+      "count": 3,
       "options": [
         {
           "value": "Select an option",
@@ -1336,6 +1338,38 @@
         }
       ],
       "defaultValue": "iliyabrook1987@gmail.com"
+    },
+    {
+      "placeholderIncludes": "What is your level of proficiency in English?",
+      "count": 1,
+      "options": [
+        {
+          "value": "Select an option",
+          "text": "Select an option",
+          "selected": false
+        },
+        {
+          "value": "None",
+          "text": "None",
+          "selected": false
+        },
+        {
+          "value": "Conversational",
+          "text": "Conversational",
+          "selected": true
+        },
+        {
+          "value": "Professional",
+          "text": "Professional",
+          "selected": false
+        },
+        {
+          "value": "Native or bilingual",
+          "text": "Native or bilingual",
+          "selected": false
+        }
+      ],
+      "defaultValue": "Conversational"
     }
   ]
 }

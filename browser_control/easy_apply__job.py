@@ -267,20 +267,49 @@ def apply_to_job(driver, autofill_data):
                         time.sleep(0.5)
                 except Exception:
                     pass
-                try:
-                    submit_btn = form.find_element(
-                        By.XPATH,
-                        ".//button[contains(@aria-label, 'Submit application') or contains(., 'Submit application')]",
-                    )
-                    if submit_btn.is_displayed() and submit_btn.is_enabled():
-                        driver.execute_script(
-                            "arguments[0].scrollIntoView({block: 'center'});",
-                            submit_btn,
+                # Reliable search and scrolling to Submit application
+                submit_clicked = False
+                for _ in range(5):
+                    try:
+                        submit_btn = form.find_element(
+                            By.XPATH,
+                            ".//button[contains(@aria-label, 'Submit application') or contains(., 'Submit application')]",
                         )
-                        submit_btn.click()
-                        time.sleep(2)
-                except Exception:
-                    pass
+                        if submit_btn.is_displayed() and submit_btn.is_enabled():
+                            driver.execute_script(
+                                "arguments[0].scrollIntoView({block: 'center'});",
+                                submit_btn,
+                            )
+                            submit_btn.click()
+                            time.sleep(2)
+                            submit_clicked = True
+                            break
+                        else:
+                            driver.execute_script(
+                                "arguments[0].scrollIntoView({block: 'end'});", form
+                            )
+                            time.sleep(1)
+                    except Exception:
+                        driver.execute_script(
+                            "arguments[0].scrollTop = arguments[0].scrollHeight;", form
+                        )
+                        time.sleep(1)
+                if not submit_clicked:
+                    # Final attempt: try scrolling the whole page down
+                    try:
+                        driver.execute_script(
+                            "window.scrollTo(0, document.body.scrollHeight);"
+                        )
+                        time.sleep(1)
+                        submit_btn = form.find_element(
+                            By.XPATH,
+                            ".//button[contains(@aria-label, 'Submit application') or contains(., 'Submit application')]",
+                        )
+                        if submit_btn.is_displayed() and submit_btn.is_enabled():
+                            submit_btn.click()
+                            time.sleep(2)
+                    except Exception:
+                        pass
                 try:
                     modal = driver.find_element(
                         By.XPATH,
