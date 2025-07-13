@@ -19,13 +19,6 @@ class BrowserTab:
         self.executable_entry.pack(side="left", fill="x", expand=True)
         ttk.Button(path_frame, text="Browse", command=self.browse_executable).pack(side="left")
 
-        ttk.Label(self.frame, text="Profile Path").pack(anchor="w")
-        profile_frame = ttk.Frame(self.frame)
-        profile_frame.pack(fill="x")
-        self.profile_entry = ttk.Entry(profile_frame, textvariable=self.profile_path_var, width=60)
-        self.profile_entry.pack(side="left", fill="x", expand=True)
-        ttk.Button(profile_frame, text="Browse", command=self.browse_profile).pack(side="left")
-
         ttk.Button(self.frame, text="Save Browser Settings", command=self.save_browser).pack(pady=5)
 
     def load_browser(self):

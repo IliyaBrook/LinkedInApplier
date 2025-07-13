@@ -7,12 +7,53 @@
     "jobTitle": "Full Stack Developer",
     "file": ""
   },
-  "radioButtons": {
-    "workAuthorization": "Yes",
-    "willingToRelocate": "No"
-  },
-  "dropdowns": {
-    "educationLevel": "Bachelor's Degree",
-    "yearsOfExperience": "3-5"
-  }
+  "radioButtons": [
+    {
+      "placeholderIncludes": "How did you hear about WSC Sports?",
+      "defaultValue": "choice-1632765643806",
+      "count": 1,
+      "createdAt": 1742924001269,
+      "options": [
+        {
+          "value": "choice-1632765643806",
+          "text": "Job advertising on social media",
+          "selected": true
+        },
+        {
+          "value": "choice-1632765901667",
+          "text": "A friend",
+          "selected": false
+        },
+        {
+          "value": "choice-1632765918598",
+          "text": "An article / interview / podcast about the company",
+          "selected": false
+        },
+        {
+          "value": "choice-1632766494627",
+          "text": "Other",
+          "selected": false
+        }
+      ]
+    }
+  ],
+  "dropdowns": [
+    {
+      "placeholderIncludes": "Are you comfortable working in an onsite setting?",
+      "count": 24,
+      "options": [
+        {
+          "value": "Yes",
+          "text": "Yes",
+          "selected": true
+        },
+        {
+          "value": "No",
+          "text": "No",
+          "selected": false
+        }
+      ],
+      "defaultValue": "Yes"
+    }
+  ]
 }

@@ -15,19 +15,23 @@ class FiltersTab:
         self.create_widgets()
         self.load_filters()
         self.update_job_apply_url()
-
+ 
     def create_widgets(self):
+        inputMinHeight = 5
         ttk.Label(self.frame, text="Bad Words (comma separated)").pack(anchor="w")
-        self.badWords_entry = ttk.Entry(self.frame, textvariable=self.badWords_var, width=60)
+        self.badWords_entry = tk.Text(self.frame, height=inputMinHeight, width=60, wrap="word")
         self.badWords_entry.pack(fill="x")
+        self.badWords_entry.bind("<KeyRelease>", lambda e: self._auto_resize(self.badWords_entry))
 
         ttk.Label(self.frame, text="Title Filter Words (comma separated)").pack(anchor="w")
-        self.titleFilterWords_entry = ttk.Entry(self.frame, textvariable=self.titleFilterWords_var, width=60)
+        self.titleFilterWords_entry = tk.Text(self.frame, height=inputMinHeight, width=60, wrap="word")
         self.titleFilterWords_entry.pack(fill="x")
+        self.titleFilterWords_entry.bind("<KeyRelease>", lambda e: self._auto_resize(self.titleFilterWords_entry))
 
         ttk.Label(self.frame, text="Title Skip Words (comma separated)").pack(anchor="w")
-        self.titleSkipWords_entry = ttk.Entry(self.frame, textvariable=self.titleSkipWords_var, width=60)
+        self.titleSkipWords_entry = tk.Text(self.frame, height=inputMinHeight, width=60, wrap="word")
         self.titleSkipWords_entry.pack(fill="x")
+        self.titleSkipWords_entry.bind("<KeyRelease>", lambda e: self._auto_resize(self.titleSkipWords_entry))
 
         ttk.Label(self.frame, text="Time Filter").pack(anchor="w")
         self.timeFilter_combo = ttk.Combobox(self.frame, textvariable=self.timeFilter_var, state="readonly", width=30)
@@ -37,22 +41,29 @@ class FiltersTab:
 
         ttk.Button(self.frame, text="Save Filters", command=self.save_filters).pack(pady=5)
 
+    def _auto_resize(self, text_widget):
+        lines = int(text_widget.index('end-1c').split('.')[0])
+        text_widget.config(height=max(4, min(lines, 10)))
+
     def load_filters(self):
         try:
             with open(self.filters_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            self.badWords_var.set(", ".join(data.get("badWords", [])))
-            self.titleFilterWords_var.set(", ".join(data.get("titleFilterWords", [])))
-            self.titleSkipWords_var.set(", ".join(data.get("titleSkipWords", [])))
+            self.badWords_entry.delete("1.0", tk.END)
+            self.badWords_entry.insert("1.0", ", ".join(data.get("badWords", [])))
+            self.titleFilterWords_entry.delete("1.0", tk.END)
+            self.titleFilterWords_entry.insert("1.0", ", ".join(data.get("titleFilterWords", [])))
+            self.titleSkipWords_entry.delete("1.0", tk.END)
+            self.titleSkipWords_entry.insert("1.0", ", ".join(data.get("titleSkipWords", [])))
             self.timeFilter_var.set(self.time_filter_label(data.get("timeFilter", "any")))
         except Exception:
             self.timeFilter_var.set("Any Time")
 
     def save_filters(self):
         data = {
-            "badWords": [w.strip() for w in self.badWords_var.get().split(",") if w.strip()],
-            "titleFilterWords": [w.strip() for w in self.titleFilterWords_var.get().split(",") if w.strip()],
-            "titleSkipWords": [w.strip() for w in self.titleSkipWords_var.get().split(",") if w.strip()],
+            "badWords": [w.strip() for w in self.badWords_entry.get("1.0", tk.END).split(",") if w.strip()],
+            "titleFilterWords": [w.strip() for w in self.titleFilterWords_entry.get("1.0", tk.END).split(",") if w.strip()],
+            "titleSkipWords": [w.strip() for w in self.titleSkipWords_entry.get("1.0", tk.END).split(",") if w.strip()],
             "timeFilter": self.time_filter_code(self.timeFilter_var.get())
         }
         try:
@@ -86,15 +97,6 @@ class FiltersTab:
             params.append("f_TPR=r2592000")
         url = base_url + "&".join(params)
         self.job_apply_url = url
-        # Сохраняем в user_filters.json для main_ui
-        try:
-            with open(self.filters_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            data["job_apply_url"] = url
-            with open(self.filters_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-        except Exception:
-            pass
 
     def time_filter_code(self, label):
         if label == "Past 24 hours":

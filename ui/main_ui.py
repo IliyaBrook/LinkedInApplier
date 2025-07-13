@@ -19,6 +19,7 @@ class MainUI:
         self.root = root
         self.root.title("LinkedIn Easy Apply Bot")
         self.is_running = False
+        self.bot_should_run = False
         self.browser_open = False
         self.browser = BrowserManager(BROWSER_FILE)
         self.create_widgets()
@@ -109,32 +110,59 @@ class MainUI:
 
     def toggle_bot(self):
         if not self.is_running:
-            self.start_browser_navigation_thread()
+            self.is_running = True
+            self.bot_should_run = True
+            self.start_btn.config(text="Stop")
+            self.start_bot_thread()
         else:
-            self.stop_bot()
+            self.bot_should_run = False
+            self.is_running = False
+            self.start_btn.config(text="Start")
 
-    def start_browser_navigation_thread(self):
-        thread = threading.Thread(target=self._start_browser_navigation)
+    def start_bot_thread(self):
+        thread = threading.Thread(target=self._run_bot)
         thread.daemon = True
         thread.start()
 
-    def _start_browser_navigation(self):
+    def _run_bot(self):
         try:
-            with open(FILTERS_FILE, "r", encoding="utf-8") as f:
-                filters = json.load(f)
-            job_apply_url = filters.get("job_apply_url", "https://www.linkedin.com/jobs/")
-            self.browser.go_to_url(job_apply_url)
-            self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE)
-            self.root.after(0, self.on_bot_started)
+            if not self.browser.driver:
+                self.root.after(0, lambda: messagebox.showerror("Error", "Browser is not open."))
+                self.is_running = False
+                self.bot_should_run = False
+                self.root.after(0, lambda: self.start_btn.config(text="Start"))
+                return
+            current_url = self.browser.driver.current_url
+            if "linkedin.com/jobs" in current_url:
+                self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run)
+            else:
+                with open(FILTERS_FILE, "r", encoding="utf-8") as f:
+                    filters = json.load(f)
+                with open(AUTOFILL_FILE, "r", encoding="utf-8") as f:
+                    autofill = json.load(f)
+                job_title = autofill.get("inputFieldConfigs", {}).get("jobTitle", "")
+                time_code = filters.get("timeFilter", "any")
+                base_url = "https://www.linkedin.com/jobs/search/?"
+                params = []
+                if job_title:
+                    params.append(f"keywords={job_title.replace(' ', '%20')}")
+                if time_code == "r86400":
+                    params.append("f_TPR=r86400")
+                elif time_code == "r604800":
+                    params.append("f_TPR=r604800")
+                elif time_code == "r2592000":
+                    params.append("f_TPR=r2592000")
+                job_apply_url = base_url + "&".join(params)
+                self.browser.go_to_url(job_apply_url)
+                self.browser.process_job_listings(AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run)
+            self.root.after(0, self.on_bot_stopped)
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to navigate: {e}"))
+            self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to run bot: {e}"))
+            self.root.after(0, self.on_bot_stopped)
 
-    def on_bot_started(self):
-        self.is_running = True
-        self.start_btn.config(text="Stop")
-
-    def stop_bot(self):
+    def on_bot_stopped(self):
         self.is_running = False
+        self.bot_should_run = False
         self.start_btn.config(text="Start")
 
 def run():

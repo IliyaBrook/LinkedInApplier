@@ -42,31 +42,116 @@ class AutofillTab:
         try:
             with open(self.autofill_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            for section, fields in data.items():
-                for key, value in fields.items():
-                    var = tk.StringVar(value=value)
-                    label = ttk.Label(self.autofill_sections[section], text=key)
-                    label.pack(anchor="w", padx=5, pady=(4,0))
-                    entry = ttk.Entry(self.autofill_sections[section], textvariable=var, width=40)
-                    entry.pack(anchor="w", padx=5, pady=(0,2))
-                    if section == "inputFieldConfigs":
-                        self.input_fields[key] = var
-                    elif section == "radioButtons":
-                        self.radio_fields[key] = var
-                    elif section == "dropdowns":
-                        self.dropdown_fields[key] = var
+            # inputFieldConfigs (старый способ)
+            for key, value in data.get("inputFieldConfigs", {}).items():
+                var = tk.StringVar(value=value)
+                label = ttk.Label(self.autofill_sections["inputFieldConfigs"], text=key)
+                label.pack(anchor="w", padx=5, pady=(4,0))
+                entry = ttk.Entry(self.autofill_sections["inputFieldConfigs"], textvariable=var, width=40)
+                entry.pack(anchor="w", padx=5, pady=(0,2))
+                self.input_fields[key] = var
+            # radioButtons (новый способ)
+            for rb in data.get("radioButtons", []):
+                label_text = rb.get("placeholderIncludes", "")
+                count = rb.get("count", None)
+                if count is not None:
+                    label_text = f"{label_text} (count: {count})"
+                label = ttk.Label(self.autofill_sections["radioButtons"], text=label_text)
+                label.pack(anchor="w", padx=5, pady=(8,0))
+                var = tk.StringVar(value=rb.get("defaultValue", ""))
+                self.radio_fields[rb.get("placeholderIncludes", "")] = var
+                for opt in rb.get("options", []):
+                    ttk.Radiobutton(self.autofill_sections["radioButtons"], text=opt["text"], value=opt["value"], variable=var).pack(anchor="w", padx=20)
+                # Кнопка удаления
+                del_btn = ttk.Button(self.autofill_sections["radioButtons"], text="Delete", command=lambda l=rb.get("placeholderIncludes", ""): self.delete_radio(l))
+                del_btn.pack(anchor="w", padx=20, pady=(0,4))
+            # dropdowns (новый способ)
+            for dd in data.get("dropdowns", []):
+                label_text = dd.get("placeholderIncludes", "")
+                count = dd.get("count", None)
+                if count is not None:
+                    label_text = f"{label_text} (count: {count})"
+                label = ttk.Label(self.autofill_sections["dropdowns"], text=label_text)
+                label.pack(anchor="w", padx=5, pady=(8,0))
+                var = tk.StringVar(value=dd.get("defaultValue", ""))
+                self.dropdown_fields[dd.get("placeholderIncludes", "")] = var
+                values = [opt["text"] for opt in dd.get("options", [])]
+                value_map = {opt["text"]: opt["value"] for opt in dd.get("options", [])}
+                combo = ttk.Combobox(self.autofill_sections["dropdowns"], textvariable=var, values=values, state="readonly")
+                combo.pack(anchor="w", padx=20)
+                combo.value_map = value_map
+                # Кнопка удаления
+                del_btn = ttk.Button(self.autofill_sections["dropdowns"], text="Delete", command=lambda l=dd.get("placeholderIncludes", ""): self.delete_dropdown(l))
+                del_btn.pack(anchor="w", padx=20, pady=(0,4))
         except Exception:
             pass
 
     def save_autofill(self):
         data = {
             "inputFieldConfigs": {k: v.get() for k, v in self.input_fields.items()},
-            "radioButtons": {k: v.get() for k, v in self.radio_fields.items()},
-            "dropdowns": {k: v.get() for k, v in self.dropdown_fields.items()}
+            "radioButtons": [],
+            "dropdowns": []
         }
+        # radioButtons
+        for label, var in self.radio_fields.items():
+            # Найти объект radioButton по label
+            rb = None
+            try:
+                with open(self.autofill_file, "r", encoding="utf-8") as f:
+                    file_data = json.load(f)
+                for item in file_data.get("radioButtons", []):
+                    if item.get("placeholderIncludes", "") == label:
+                        rb = item
+                        break
+            except Exception:
+                pass
+            if rb:
+                rb["defaultValue"] = var.get()
+                data["radioButtons"].append(rb)
+        # dropdowns
+        for label, var in self.dropdown_fields.items():
+            dd = None
+            try:
+                with open(self.autofill_file, "r", encoding="utf-8") as f:
+                    file_data = json.load(f)
+                for item in file_data.get("dropdowns", []):
+                    if item.get("placeholderIncludes", "") == label:
+                        dd = item
+                        break
+            except Exception:
+                pass
+            if dd:
+                dd["defaultValue"] = dd["options"][[opt["text"] for opt in dd["options"]].index(var.get())]["value"] if dd["options"] else var.get()
+                data["dropdowns"].append(dd)
         try:
             with open(self.autofill_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
             messagebox.showinfo("Success", "Autofill data saved successfully.")
         except Exception as e:
-            messagebox.showerror("Error", str(e)) 
+            messagebox.showerror("Error", str(e))
+
+    def delete_radio(self, label):
+        if label in self.radio_fields:
+            del self.radio_fields[label]
+        try:
+            with open(self.autofill_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            data["radioButtons"] = [rb for rb in data.get("radioButtons", []) if rb.get("placeholderIncludes", "") != label]
+            with open(self.autofill_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            self.load_autofill()
+        except Exception:
+            pass
+
+    def delete_dropdown(self, label):
+        if label in self.dropdown_fields:
+            del self.dropdown_fields[label]
+        try:
+            with open(self.autofill_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            data["dropdowns"] = [dd for dd in data.get("dropdowns", []) if dd.get("placeholderIncludes", "") != label]
+            with open(self.autofill_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            self.load_autofill()
+        except Exception:
+            pass 
