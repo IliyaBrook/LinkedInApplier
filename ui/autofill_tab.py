@@ -14,239 +14,480 @@ class AutofillTab:
         self.autofill_section_frames = {}
         self.autofill_section_states = {}
         self.dropdown_value_maps = {}
+        self.section_buttons = {}
+        self.setup_styles()
         self.create_widgets()
         self.load_autofill()
 
-    def create_widgets(self):
-        for section in ["textInput", "radioButtons", "dropdowns"]:
-            frame = ttk.Frame(self.frame)
-            frame.pack(fill="x", padx=5, pady=2)
-            btn = ttk.Button(
-                frame,
-                text=section,
-                width=25,
-                command=lambda s=section: self.toggle_section(s),
-            )
-            btn.pack(anchor="w", pady=(2, 0))
-            # --- SCROLLABLE SECTION ---
-            canvas = tk.Canvas(frame, height=400, highlightthickness=0)
-            vsb = ttk.Scrollbar(frame, orient="vertical", command=canvas.yview)
-            content = ttk.Frame(canvas)
-            canvas.create_window((0, 0), window=content, anchor="nw")
-            canvas.configure(yscrollcommand=vsb.set)
+    def setup_styles(self):
+        """Setup custom styles for better UI"""
+        style = ttk.Style()
 
-            def _on_frame_configure(event, c=canvas, f=content):
-                c.configure(scrollregion=c.bbox("all"))
-
-            content.bind("<Configure>", _on_frame_configure)
-
-            def _on_mousewheel(event, c=canvas):
-                c.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-            def _bind_mousewheel(event, c=canvas):
-                c.bind_all("<MouseWheel>", lambda e: _on_mousewheel(e, c))
-
-            def _unbind_mousewheel(event, c=canvas):
-                c.unbind_all("<MouseWheel>")
-
-            canvas.bind("<Enter>", _bind_mousewheel)
-            canvas.bind("<Leave>", _unbind_mousewheel)
-            canvas.pack(side="left", fill="x", expand=True)
-            vsb.pack(side="right", fill="y")
-            canvas.pack_forget()
-            vsb.pack_forget()
-            self.autofill_sections[section] = content
-            self.autofill_section_frames[section] = frame
-            self.autofill_section_states[section] = False
-            self.autofill_sections[section + "_canvas"] = canvas
-            self.autofill_sections[section + "_vsb"] = vsb
-        ttk.Button(self.frame, text="Save Autofill", command=self.save_autofill).pack(
-            pady=5
+        # Configure section button style
+        style.configure(
+            "Section.TButton", font=("Segoe UI", 10, "bold"), padding=(10, 8)
         )
 
-    def toggle_section(self, section):
-        state = self.autofill_section_states[section]
-        canvas = self.autofill_sections[section + "_canvas"]
-        vsb = self.autofill_sections[section + "_vsb"]
+        # Configure section frame style
+        style.configure("Section.TFrame", relief="solid", borderwidth=1)
+
+        # Configure content frame style
+        style.configure("Content.TFrame", padding=10)
+
+        # Configure delete button style
+        style.configure("Delete.TButton", font=("Segoe UI", 8), foreground="red")
+
+        # Configure save button style
+        style.configure("Save.TButton", font=("Segoe UI", 10, "bold"), padding=(20, 10))
+
+    def create_widgets(self):
+        """Create the main widget structure"""
+        # Main container with padding
+        main_container = ttk.Frame(self.frame)
+        main_container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Header
+        header_frame = ttk.Frame(main_container)
+        header_frame.pack(fill="x", pady=(0, 15))
+
+        title_label = ttk.Label(
+            header_frame, text="Autofill Configuration", font=("Segoe UI", 14, "bold")
+        )
+        title_label.pack(anchor="w")
+
+        subtitle_label = ttk.Label(
+            header_frame,
+            text="Manage your form autofill settings",
+            font=("Segoe UI", 9),
+            foreground="gray",
+        )
+        subtitle_label.pack(anchor="w", pady=(2, 0))
+
+        # Sections container
+        sections_container = ttk.Frame(main_container)
+        sections_container.pack(fill="both", expand=True)
+
+        # Create sections
+        section_configs = [
+            ("textInput", "📝 Text Input Fields", "Manage text input autofill values"),
+            (
+                "radioButtons",
+                "🔘 Radio Button Groups",
+                "Configure radio button selections",
+            ),
+            ("dropdowns", "📋 Dropdown Menus", "Set dropdown default values"),
+        ]
+
+        for i, (section_id, title, description) in enumerate(section_configs):
+            self.create_section(sections_container, section_id, title, description)
+            if i < len(section_configs) - 1:
+                # Add separator between sections
+                separator = ttk.Separator(sections_container, orient="horizontal")
+                separator.pack(fill="x", pady=10)
+
+        # Save button container
+        save_container = ttk.Frame(main_container)
+        save_container.pack(fill="x", pady=(20, 0))
+
+        save_button = ttk.Button(
+            save_container,
+            text="💾 Save Autofill Configuration",
+            command=self.save_autofill,
+            style="Save.TButton",
+        )
+        save_button.pack(side="right")
+
+    def create_section(self, parent, section_id, title, description):
+        """Create a collapsible section"""
+        # Section container
+        section_frame = ttk.Frame(parent, style="Section.TFrame")
+        section_frame.pack(fill="x", pady=5)
+
+        # Section header
+        header_frame = ttk.Frame(section_frame)
+        header_frame.pack(fill="x", padx=5, pady=5)
+
+        # Toggle button with arrow indicator
+        btn_text = (
+            f"▼ {title}"
+            if section_id in self.autofill_section_states
+            and self.autofill_section_states[section_id]
+            else f"▶ {title}"
+        )
+        toggle_btn = ttk.Button(
+            header_frame,
+            text=btn_text,
+            command=lambda: self.toggle_section(section_id),
+            style="Section.TButton",
+        )
+        toggle_btn.pack(side="left")
+
+        # Description
+        desc_label = ttk.Label(
+            header_frame, text=description, font=("Segoe UI", 9), foreground="gray"
+        )
+        desc_label.pack(side="left", padx=(15, 0))
+
+        # Content container with scrollable area
+        content_container = ttk.Frame(section_frame)
+        # Don't pack initially - will be packed when section is opened
+
+        # Create scrollable content area
+        canvas = tk.Canvas(
+            content_container,
+            height=300 if section_id == "textInput" else 200,
+            highlightthickness=0,
+            bg="white",
+        )
+        vsb = ttk.Scrollbar(content_container, orient="vertical", command=canvas.yview)
+        content_frame = ttk.Frame(canvas, style="Content.TFrame")
+
+        # Pack canvas and scrollbar within content_container
+        canvas.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+
+        # Configure scrolling
+        canvas_window = canvas.create_window((0, 0), window=content_frame, anchor="nw")
+        canvas.configure(yscrollcommand=vsb.set)
+
+        def _on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            # Make content frame fill canvas width
+            canvas_width = canvas.winfo_width()
+            if canvas_width > 1:  # Avoid initial invalid width
+                canvas.itemconfig(canvas_window, width=canvas_width)
+
+        def _on_canvas_configure(event):
+            # Update content frame width when canvas is resized
+            canvas_width = event.width
+            canvas.itemconfig(canvas_window, width=canvas_width)
+
+        content_frame.bind("<Configure>", _on_frame_configure)
+        canvas.bind("<Configure>", _on_canvas_configure)
+
+        # Mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        def _bind_mousewheel(event):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        def _unbind_mousewheel(event):
+            canvas.unbind_all("<MouseWheel>")
+
+        canvas.bind("<Enter>", _bind_mousewheel)
+        canvas.bind("<Leave>", _unbind_mousewheel)
+
+        # Initially hide content - hide the entire container
+        content_container.pack_forget()
+
+        # Store references
+        self.autofill_sections[section_id] = content_frame
+        self.autofill_section_frames[section_id] = section_frame
+        self.autofill_section_states[section_id] = False
+        self.autofill_sections[section_id + "_container"] = content_container
+        self.section_buttons[section_id] = toggle_btn
+
+    def toggle_section(self, section_id):
+        """Toggle section visibility with smooth animation"""
+        state = self.autofill_section_states[section_id]
+        container = self.autofill_sections[section_id + "_container"]
+        button = self.section_buttons[section_id]
+
         if state:
-            canvas.pack_forget()
-            vsb.pack_forget()
+            # Hide section - hide entire container
+            container.pack_forget()
+            # Update button text
+            current_text = button.cget("text")
+            new_text = current_text.replace("▼", "▶")
+            button.configure(text=new_text)
         else:
-            canvas.pack(side="left", fill="x", expand=True)
-            vsb.pack(side="right", fill="y")
-        self.autofill_section_states[section] = not state
+            # Show section - show container with proper packing
+            container.pack(fill="both", expand=True, padx=5, pady=(0, 5))
+            # Update button text
+            current_text = button.cget("text")
+            new_text = current_text.replace("▶", "▼")
+            button.configure(text=new_text)
+
+        self.autofill_section_states[section_id] = not state
+
+    def create_text_input_item(self, parent, key, value):
+        """Create a text input item with improved layout"""
+        item_frame = ttk.Frame(parent)
+        item_frame.pack(fill="x", pady=5)
+
+        # Label
+        label = ttk.Label(item_frame, text=key, font=("Segoe UI", 9, "bold"))
+        label.pack(anchor="w")
+
+        # Input row
+        input_frame = ttk.Frame(item_frame)
+        input_frame.pack(fill="x", pady=(5, 0))
+
+        # Entry field
+        var = tk.StringVar(value=value)
+        entry = ttk.Entry(input_frame, textvariable=var, width=40)
+        entry.pack(side="left", fill="x", expand=True)
+
+        # Delete button
+        del_btn = ttk.Button(
+            input_frame,
+            text="🗑 Delete",
+            command=lambda: self.delete_textinput(key),
+            style="Delete.TButton",
+        )
+        del_btn.pack(side="right", padx=(10, 0))
+
+        self.input_fields[key] = var
+
+    def create_radio_button_item(self, parent, rb_data):
+        """Create a radio button group with improved layout"""
+        item_frame = ttk.Frame(parent)
+        item_frame.pack(fill="x", pady=10)
+
+        # Header
+        label_text = rb_data.get("placeholderIncludes", "")
+        count = rb_data.get("count", None)
+        if count is not None:
+            label_text = f"{label_text} (count: {count})"
+
+        header_frame = ttk.Frame(item_frame)
+        header_frame.pack(fill="x")
+
+        label = ttk.Label(header_frame, text=label_text, font=("Segoe UI", 9, "bold"))
+        label.pack(side="left")
+
+        del_btn = ttk.Button(
+            header_frame,
+            text="🗑 Delete",
+            command=lambda: self.delete_radio(rb_data.get("placeholderIncludes", "")),
+            style="Delete.TButton",
+        )
+        del_btn.pack(side="right")
+
+        # Options container
+        options_frame = ttk.Frame(item_frame)
+        options_frame.pack(fill="x", pady=(10, 0), padx=20)
+
+        var = tk.StringVar(value=rb_data.get("defaultValue", ""))
+        self.radio_fields[rb_data.get("placeholderIncludes", "")] = var
+
+        for opt in rb_data.get("options", []):
+            radio_btn = ttk.Radiobutton(
+                options_frame, text=opt["text"], value=opt["value"], variable=var
+            )
+            radio_btn.pack(anchor="w", pady=2)
+
+    def create_dropdown_item(self, parent, dd_data):
+        """Create a dropdown item with improved layout"""
+        item_frame = ttk.Frame(parent)
+        item_frame.pack(fill="x", pady=10)
+
+        # Header
+        label_text = dd_data.get("placeholderIncludes", "")
+        count = dd_data.get("count", None)
+        if count is not None:
+            label_text = f"{label_text} (count: {count})"
+
+        label = ttk.Label(item_frame, text=label_text, font=("Segoe UI", 9, "bold"))
+        label.pack(anchor="w")
+
+        # Dropdown row
+        dropdown_frame = ttk.Frame(item_frame)
+        dropdown_frame.pack(fill="x", pady=(5, 0))
+
+        var = tk.StringVar(value=dd_data.get("defaultValue", ""))
+        self.dropdown_fields[dd_data.get("placeholderIncludes", "")] = var
+
+        values = [opt["text"] for opt in dd_data.get("options", [])]
+        value_map = {opt["text"]: opt["value"] for opt in dd_data.get("options", [])}
+
+        combo = ttk.Combobox(
+            dropdown_frame, textvariable=var, values=values, state="readonly", width=40
+        )
+        combo.pack(side="left", fill="x", expand=True)
+
+        self.dropdown_value_maps[label_text] = value_map
+
+        del_btn = ttk.Button(
+            dropdown_frame,
+            text="🗑 Delete",
+            command=lambda: self.delete_dropdown(
+                dd_data.get("placeholderIncludes", "")
+            ),
+            style="Delete.TButton",
+        )
+        del_btn.pack(side="right", padx=(10, 0))
 
     def load_autofill(self):
+        """Load autofill data with improved UI creation"""
+        # Clear existing widgets
         for section in ["textInput", "radioButtons", "dropdowns"]:
             for widget in self.autofill_sections[section].winfo_children():
                 widget.destroy()
+
+        # Clear field dictionaries
+        self.input_fields.clear()
+        self.radio_fields.clear()
+        self.dropdown_fields.clear()
+        self.dropdown_value_maps.clear()
+
         try:
             with open(self.autofill_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
+            # Load text inputs
             for key, value in data.get("textInput", {}).items():
-                var = tk.StringVar(value=value)
-                label = ttk.Label(self.autofill_sections["textInput"], text=key)
-                label.pack(anchor="w", padx=5, pady=(8, 0))
-                row = ttk.Frame(self.autofill_sections["textInput"])
-                entry = ttk.Entry(row, textvariable=var, width=30)
-                del_btn = ttk.Button(
-                    row,
-                    text="Delete",
-                    command=lambda l=key: self.delete_textinput(l),
-                    width=8,
+                self.create_text_input_item(
+                    self.autofill_sections["textInput"], key, value
                 )
-                entry.pack(side="left", padx=(0, 2), pady=4)
-                del_btn.pack(side="left", padx=(8, 5), pady=4)
-                row.pack(fill="x", padx=10, pady=0)
-                self.input_fields[key] = var
-            for rb in data.get("radioButtons", []):
-                label_text = rb.get("placeholderIncludes", "")
-                count = rb.get("count", None)
-                if count is not None:
-                    label_text = f"{label_text} (count: {count})"
-                label = ttk.Label(
-                    self.autofill_sections["radioButtons"], text=label_text
+
+            # Load radio buttons
+            for rb_data in data.get("radioButtons", []):
+                self.create_radio_button_item(
+                    self.autofill_sections["radioButtons"], rb_data
                 )
-                label.pack(anchor="w", padx=5, pady=(8, 0))
-                var = tk.StringVar(value=rb.get("defaultValue", ""))
-                self.radio_fields[rb.get("placeholderIncludes", "")] = var
-                for opt in rb.get("options", []):
-                    ttk.Radiobutton(
-                        self.autofill_sections["radioButtons"],
-                        text=opt["text"],
-                        value=opt["value"],
-                        variable=var,
-                    ).pack(anchor="w", padx=20)
-                del_btn = ttk.Button(
-                    self.autofill_sections["radioButtons"],
-                    text="Delete",
-                    command=lambda l=rb.get(
-                        "placeholderIncludes", ""
-                    ): self.delete_radio(l),
-                )
-                del_btn.pack(anchor="w", padx=20, pady=(0, 4))
-            for dd in data.get("dropdowns", []):
-                label_text = dd.get("placeholderIncludes", "")
-                count = dd.get("count", None)
-                if count is not None:
-                    label_text = f"{label_text} (count: {count})"
-                label = ttk.Label(self.autofill_sections["dropdowns"], text=label_text)
-                label.pack(anchor="w", padx=5, pady=(8, 0))
-                row = ttk.Frame(self.autofill_sections["dropdowns"])
-                var = tk.StringVar(value=dd.get("defaultValue", ""))
-                self.dropdown_fields[dd.get("placeholderIncludes", "")] = var
-                values = [opt["text"] for opt in dd.get("options", [])]
-                value_map = {opt["text"]: opt["value"] for opt in dd.get("options", [])}
-                combo = ttk.Combobox(
-                    row, textvariable=var, values=values, state="readonly", width=28
-                )
-                self.dropdown_value_maps[label_text] = value_map
-                del_btn = ttk.Button(
-                    row,
-                    text="Delete",
-                    command=lambda l=dd.get(
-                        "placeholderIncludes", ""
-                    ): self.delete_dropdown(l),
-                    width=8,
-                )
-                combo.pack(side="left", padx=(0, 2), pady=8)
-                del_btn.pack(side="left", padx=(8, 5), pady=8)
-                row.pack(fill="x", padx=10, pady=0)
-        except Exception:
-            pass
+
+            # Load dropdowns
+            for dd_data in data.get("dropdowns", []):
+                self.create_dropdown_item(self.autofill_sections["dropdowns"], dd_data)
+
+        except Exception as e:
+            print(f"Error loading autofill data: {e}")
+            # Show empty state message
+            self.show_empty_state()
+
+    def show_empty_state(self):
+        """Show empty state message when no data is available"""
+        for section_id in ["textInput", "radioButtons", "dropdowns"]:
+            empty_frame = ttk.Frame(self.autofill_sections[section_id])
+            empty_frame.pack(fill="both", expand=True, pady=20)
+
+            empty_label = ttk.Label(
+                empty_frame,
+                text="No items configured yet",
+                font=("Segoe UI", 10),
+                foreground="gray",
+            )
+            empty_label.pack(anchor="center")
 
     def save_autofill(self):
-        data = {
-            "textInput": {k: v.get() for k, v in self.input_fields.items()},
-            "radioButtons": [],
-            "dropdowns": [],
-        }
-        # radioButtons
-        for label, var in self.radio_fields.items():
-            rb = None
-            try:
-                with open(self.autofill_file, "r", encoding="utf-8") as f:
-                    file_data = json.load(f)
-                for item in file_data.get("radioButtons", []):
-                    if item.get("placeholderIncludes", "") == label:
-                        rb = item
-                        break
-            except Exception:
-                pass
-            if rb:
-                rb["defaultValue"] = var.get()
-                data["radioButtons"].append(rb)
-        # dropdowns
-        for label, var in self.dropdown_fields.items():
-            dd = None
-            try:
-                with open(self.autofill_file, "r", encoding="utf-8") as f:
-                    file_data = json.load(f)
-                for item in file_data.get("dropdowns", []):
-                    if item.get("placeholderIncludes", "") == label:
-                        dd = item
-                        break
-            except Exception:
-                pass
-            if dd:
-                dd["defaultValue"] = (
-                    dd["options"][
-                        [opt["text"] for opt in dd["options"]].index(var.get())
-                    ]["value"]
-                    if dd["options"]
-                    else var.get()
-                )
-                data["dropdowns"].append(dd)
+        """Save autofill data with user feedback"""
         try:
+            data = {
+                "textInput": {k: v.get() for k, v in self.input_fields.items()},
+                "radioButtons": [],
+                "dropdowns": [],
+            }
+
+            # Save radioButtons
+            for label, var in self.radio_fields.items():
+                rb = None
+                try:
+                    with open(self.autofill_file, "r", encoding="utf-8") as f:
+                        file_data = json.load(f)
+                    for item in file_data.get("radioButtons", []):
+                        if item.get("placeholderIncludes", "") == label:
+                            rb = item
+                            break
+                except Exception:
+                    pass
+                if rb:
+                    rb["defaultValue"] = var.get()
+                    data["radioButtons"].append(rb)
+
+            # Save dropdowns
+            for label, var in self.dropdown_fields.items():
+                dd = None
+                try:
+                    with open(self.autofill_file, "r", encoding="utf-8") as f:
+                        file_data = json.load(f)
+                    for item in file_data.get("dropdowns", []):
+                        if item.get("placeholderIncludes", "") == label:
+                            dd = item
+                            break
+                except Exception:
+                    pass
+                if dd:
+                    dd["defaultValue"] = (
+                        dd["options"][
+                            [opt["text"] for opt in dd["options"]].index(var.get())
+                        ]["value"]
+                        if dd["options"]
+                        and var.get() in [opt["text"] for opt in dd["options"]]
+                        else var.get()
+                    )
+                    data["dropdowns"].append(dd)
+
             with open(self.autofill_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
-            messagebox.showinfo("Success", "Autofill data saved successfully.")
+
+            messagebox.showinfo(
+                "✅ Success", "Autofill configuration saved successfully!"
+            )
+
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror(
+                "❌ Error", f"Failed to save autofill configuration:\n{str(e)}"
+            )
 
     def delete_radio(self, label):
-        if label in self.radio_fields:
-            del self.radio_fields[label]
-        try:
-            with open(self.autofill_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            data["radioButtons"] = [
-                rb
-                for rb in data.get("radioButtons", [])
-                if rb.get("placeholderIncludes", "") != label
-            ]
-            with open(self.autofill_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-            self.load_autofill()
-        except Exception:
-            pass
+        """Delete radio button group"""
+        if messagebox.askyesno(
+            "Confirm Delete",
+            f"Are you sure you want to delete the radio button group '{label}'?",
+        ):
+            if label in self.radio_fields:
+                del self.radio_fields[label]
+            try:
+                with open(self.autofill_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                data["radioButtons"] = [
+                    rb
+                    for rb in data.get("radioButtons", [])
+                    if rb.get("placeholderIncludes", "") != label
+                ]
+                with open(self.autofill_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                self.load_autofill()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete item: {str(e)}")
 
     def delete_dropdown(self, label):
-        if label in self.dropdown_fields:
-            del self.dropdown_fields[label]
-        try:
-            with open(self.autofill_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            data["dropdowns"] = [
-                dd
-                for dd in data.get("dropdowns", [])
-                if dd.get("placeholderIncludes", "") != label
-            ]
-            with open(self.autofill_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-            self.load_autofill()
-        except Exception:
-            pass
+        """Delete dropdown item"""
+        if messagebox.askyesno(
+            "Confirm Delete", f"Are you sure you want to delete the dropdown '{label}'?"
+        ):
+            if label in self.dropdown_fields:
+                del self.dropdown_fields[label]
+            try:
+                with open(self.autofill_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                data["dropdowns"] = [
+                    dd
+                    for dd in data.get("dropdowns", [])
+                    if dd.get("placeholderIncludes", "") != label
+                ]
+                with open(self.autofill_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                self.load_autofill()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete item: {str(e)}")
 
     def delete_textinput(self, label):
-        if label in self.input_fields:
-            del self.input_fields[label]
-        try:
-            with open(self.autofill_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            data["textInput"].pop(label, None)
-            with open(self.autofill_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-            self.load_autofill()
-        except Exception:
-            pass
+        """Delete text input item"""
+        if messagebox.askyesno(
+            "Confirm Delete",
+            f"Are you sure you want to delete the text input '{label}'?",
+        ):
+            if label in self.input_fields:
+                del self.input_fields[label]
+            try:
+                with open(self.autofill_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                data["textInput"].pop(label, None)
+                with open(self.autofill_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                self.load_autofill()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to delete item: {str(e)}")
