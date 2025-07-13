@@ -11,7 +11,10 @@
     "How many years of work experience do you have with Next.js?": "3",
     "First name": "Iliya",
     "Last name": "Brook",
-    "City": ""
+    "City": "",
+    "How many years of work experience do you have with C#?": "0",
+    "How many years of work experience do you have with Real-Time Operating Systems (RTOS)?": "",
+    "How many years of work experience do you have with Embedded Systems?": ""
   },
   "radioButtons": [
     {
@@ -80,7 +83,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 6,
+      "count": 7,
       "options": [
         {
           "value": "Select an option",
@@ -358,8 +361,8 @@
           "selected": false
         },
         {
-          "value": "Cote D\u2019Ivoire (Ivory Coast) (+225)",
-          "text": "Cote D\u2019Ivoire (Ivory Coast) (+225)",
+          "value": "Cote D’Ivoire (Ivory Coast) (+225)",
+          "text": "Cote D’Ivoire (Ivory Coast) (+225)",
           "selected": false
         },
         {
@@ -1327,7 +1330,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 4,
+      "count": 5,
       "options": [
         {
           "value": "Select an option",
