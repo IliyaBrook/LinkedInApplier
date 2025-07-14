@@ -212,8 +212,19 @@ class MainUI:
         if self.start_btn is not None:
             self.start_btn.config(text="Start")
 
-
 def run():
     root = ThemedTk(theme="arc")
+    window_width = 750
+    window_height = 700
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    x = (screen_width - window_width) // 2
+    y = (screen_height - window_height) // 2
+
+    root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+    root.title("LinkedIn Easy Apply Bot")
+
     app = MainUI(root)
     root.mainloop()
