@@ -18,7 +18,8 @@
     "How many years of experience do you have?": "4",
     "What is your salary expectations?": "20.000",
     "How many years of work experience do you have with DevOps?": "3",
-    "How many years of work experience do you have with React.js?": "4"
+    "How many years of work experience do you have with React.js?": "4",
+    "How many years of work experience do you have with Agile Software Development?": "2"
   },
   "radioButtons": [
     {
@@ -123,7 +124,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 11,
+      "count": 12,
       "options": [
         {
           "value": "Select an option",
@@ -1370,7 +1371,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 9,
+      "count": 10,
       "options": [
         {
           "value": "Select an option",
@@ -1416,6 +1417,28 @@
         }
       ],
       "defaultValue": "Conversational"
+    },
+    {
+      "placeholderIncludes": "Are you comfortable working on-site in Rishon LeZion?",
+      "count": 1,
+      "options": [
+        {
+          "value": "Select an option",
+          "text": "Select an option",
+          "selected": true
+        },
+        {
+          "value": "Yes",
+          "text": "Yes",
+          "selected": false
+        },
+        {
+          "value": "No",
+          "text": "No",
+          "selected": false
+        }
+      ],
+      "defaultValue": "Select an option"
     }
   ]
 }

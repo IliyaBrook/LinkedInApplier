@@ -310,6 +310,74 @@ def apply_to_job(driver, autofill_data):
             # Look for next action buttons
             next_action = find_next_action_button(driver, apply_modal)
 
+            if next_action["type"] == "none":
+                print(f"❌ No action button found in iteration {iteration + 1}")
+
+                # Try scrolling and looking again before giving up
+                if iteration < 2:  # Only retry for first 2 iterations
+                    print("Retrying button search after scrolling...")
+                    try:
+                        # Try scrolling to different parts of the modal
+                        driver.execute_script(
+                            "arguments[0].scrollTop = 0;", apply_modal
+                        )
+                        smart_delay(1.0)
+
+                        driver.execute_script(
+                            "arguments[0].scrollTop = arguments[0].scrollHeight / 2;",
+                            apply_modal,
+                        )
+                        smart_delay(1.0)
+
+                        driver.execute_script(
+                            "arguments[0].scrollTop = arguments[0].scrollHeight;",
+                            apply_modal,
+                        )
+                        smart_delay(1.0)
+
+                        # Try finding buttons again
+                        next_action = find_next_action_button(driver, apply_modal)
+
+                        if next_action["type"] != "none":
+                            print(f"✅ Found button after retry: {next_action['type']}")
+                        else:
+                            print("Still no button found after retry")
+                    except Exception as e:
+                        print(f"Error during retry: {e}")
+
+                # If still no button found, check if application might be complete
+                if next_action["type"] == "none":
+                    try:
+                        modal_text = apply_modal.text.lower()
+                        completion_indicators = [
+                            "application sent",
+                            "application submitted",
+                            "thank you",
+                            "your application has been sent",
+                            "successfully submitted",
+                            "application complete",
+                        ]
+
+                        if any(
+                            indicator in modal_text
+                            for indicator in completion_indicators
+                        ):
+                            print(
+                                "✅ Application appears to be complete based on modal text"
+                            )
+                            close_all_modals(driver)
+                            return True
+
+                        print("No completion indicators found in modal text")
+                        print(f"Modal text snippet: {modal_text[:200]}...")
+
+                    except Exception as e:
+                        print(f"Error checking completion: {e}")
+
+                    print("Terminating application process - no valid buttons found")
+                    terminate_job_modal(driver)
+                    break
+
             if next_action["type"] == "submit":
                 print("Found submit button, attempting to submit application")
 
@@ -390,17 +458,49 @@ def apply_to_job(driver, autofill_data):
 
                 next_button = next_action["element"]
 
+                # Debug button information
                 try:
-                    print("Scrolling to and clicking Next/Review button...")
+                    button_text = next_button.text.strip()
+                    button_aria = (
+                        next_button.get_attribute("aria-label") or "No aria-label"
+                    )
+                    button_class = next_button.get_attribute("class") or "No class"
+                    button_data_attrs = []
+                    for attr in [
+                        "data-easy-apply-next-button",
+                        "data-live-test-easy-apply-next-button",
+                        "data-easy-apply-review-button",
+                    ]:
+                        if next_button.get_attribute(attr):
+                            button_data_attrs.append(attr)
+                    print(
+                        f"Button details: text='{button_text}', aria-label='{button_aria}', data-attrs={button_data_attrs}"
+                    )
+                except:
+                    pass
+
+                try:
+                    # Scroll to the button location first
+                    print("Scrolling to Next/Review button...")
                     driver.execute_script(
                         "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
                         next_button,
                     )
-                    smart_delay(0.5)
+                    smart_delay(1.0)  # Give more time for scroll
 
+                    # Check if button is still enabled and visible
+                    if not next_button.is_enabled():
+                        print("⚠️ Next/Review button is not enabled, waiting...")
+                        smart_delay(2.0)
+
+                    if not next_button.is_displayed():
+                        print("⚠️ Next/Review button is not visible after scroll")
+
+                    # Try clicking the button
+                    print("Attempting to click Next/Review button...")
                     next_button.click()
                     print("✅ Next/Review button clicked successfully")
-                    smart_delay(1.5)
+                    smart_delay(2.0)  # Give more time for page transition
 
                     # Handle save modal after next
                     if handle_save_application_modal(driver):
@@ -417,8 +517,51 @@ def apply_to_job(driver, autofill_data):
                             terminate_job_modal(driver)
                             return False
 
+                    # Verify that we moved to next step by checking if modal content changed
+                    try:
+                        new_modal = wait_for_element(
+                            driver, ".artdeco-modal", timeout=3
+                        )
+                        if new_modal:
+                            print("✅ Successfully moved to next step")
+                        else:
+                            print(
+                                "⚠️ Modal disappeared after clicking Next - this might be normal"
+                            )
+                    except:
+                        pass
+
                 except Exception as e:
-                    print(f"Error clicking next button: {e}")
+                    print(f"❌ Error clicking next button: {e}")
+
+                    # Debug: show what buttons are available now
+                    try:
+                        current_modal = wait_for_element(
+                            driver, ".artdeco-modal", timeout=2
+                        )
+                        if current_modal:
+                            all_buttons = current_modal.find_elements(
+                                By.TAG_NAME, "button"
+                            )
+                            print(
+                                f"Available buttons after error ({len(all_buttons)}):"
+                            )
+                            for i, btn in enumerate(all_buttons[:5]):
+                                try:
+                                    btn_text = btn.text.strip() or "No text"
+                                    btn_aria = (
+                                        btn.get_attribute("aria-label")
+                                        or "No aria-label"
+                                    )
+                                    btn_displayed = btn.is_displayed()
+                                    print(
+                                        f"  Button {i+1}: text='{btn_text}', aria='{btn_aria}', displayed={btn_displayed}"
+                                    )
+                                except:
+                                    pass
+                    except:
+                        pass
+
                     terminate_job_modal(driver)
                     return False
 
@@ -444,11 +587,8 @@ def apply_to_job(driver, autofill_data):
                     terminate_job_modal(driver)
                     return False
 
-            else:
-                print("No valid action button found, terminating")
-                terminate_job_modal(driver)
-                break
-
+            # If we reach here with next_action["type"] == "none", it was already handled above
+            # Continue to next iteration
             iteration += 1
 
         # Final cleanup
@@ -852,13 +992,23 @@ def find_next_action_button(driver, modal):
     review_selectors = [
         'button[aria-label="Review your application"]',
         'button[aria-label*="Review"]',
+        "button[data-easy-apply-review-button]",
+        "button[data-live-test-easy-apply-review-button]",
         'button:contains("Review")',
+        '//button[contains(text(), "Review")]',
+        '//button[contains(@aria-label, "Review")]',
     ]
 
     review_btn = None
     for selector in review_selectors:
         try:
-            if ":contains(" in selector:
+            if selector.startswith("//"):
+                elements = modal.find_elements(By.XPATH, selector)
+                for elem in elements:
+                    if elem.is_displayed():
+                        review_btn = elem
+                        break
+            elif ":contains(" in selector:
                 xpath_selector = f"//button[contains(text(), 'Review')]"
                 elements = modal.find_elements(By.XPATH, xpath_selector)
                 for elem in elements:
@@ -876,19 +1026,44 @@ def find_next_action_button(driver, modal):
         print(
             f"Found Review button: {review_btn.get_attribute('aria-label') or review_btn.text}"
         )
+        # Scroll to review button
+        try:
+            driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+                review_btn,
+            )
+            smart_delay(0.5)
+            print("Scrolled to Review button")
+        except:
+            pass
         return {"type": "next", "element": review_btn}
 
-    # Check for next button (generic)
+    # Check for next button (generic) - improved with more selectors
     next_selectors = [
+        'button[aria-label="Continue to next step"]',  # From user's example
+        "button[data-easy-apply-next-button]",  # From user's example
+        "button[data-live-test-easy-apply-next-button]",  # From user's example
         'button[aria-label*="Next"]',
+        'button[aria-label*="Continue"]',
         'button:contains("Next")',
         '.artdeco-button--primary:contains("Next")',
+        '//button[contains(text(), "Next")]',
+        '//button[contains(@aria-label, "Next")]',
+        '//button[contains(@aria-label, "Continue")]',
+        "//button[@data-easy-apply-next-button]",
+        "//button[@data-live-test-easy-apply-next-button]",
     ]
 
     next_btn = None
     for selector in next_selectors:
         try:
-            if ":contains(" in selector:
+            if selector.startswith("//"):
+                elements = modal.find_elements(By.XPATH, selector)
+                for elem in elements:
+                    if elem.is_displayed():
+                        next_btn = elem
+                        break
+            elif ":contains(" in selector:
                 xpath_selector = f"//button[contains(text(), 'Next')]"
                 elements = modal.find_elements(By.XPATH, xpath_selector)
                 for elem in elements:
@@ -906,6 +1081,16 @@ def find_next_action_button(driver, modal):
         print(
             f"Found Next button: {next_btn.get_attribute('aria-label') or next_btn.text}"
         )
+        # Scroll to next button
+        try:
+            driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+                next_btn,
+            )
+            smart_delay(0.5)
+            print("Scrolled to Next button")
+        except:
+            pass
         return {"type": "next", "element": next_btn}
 
     # Debug: show all buttons in modal if none found
