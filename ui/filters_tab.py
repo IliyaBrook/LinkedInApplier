@@ -186,14 +186,8 @@ class FiltersTab:
     def on_time_filter_change(self):
         self.save_filters()
 
-    def update_job_apply_url(self):
-        try:
-            with open("DB/form_autofill.json", "r", encoding="utf-8") as f:
-                autofill = json.load(f)
-            job_title = autofill.get("textInput", {}).get("jobTitle", "")
-        except Exception:
-            job_title = ""
-        time_code = self.time_filter_code(self.timeFilter_var.get())
+    @staticmethod
+    def build_linkedin_job_url(job_title, time_code, easy_apply_only):
         base_url = "https://www.linkedin.com/jobs/search/?"
         params = []
         if job_title:
@@ -204,10 +198,22 @@ class FiltersTab:
             params.append("f_TPR=r604800")
         elif time_code == "r2592000":
             params.append("f_TPR=r2592000")
-        if self.easy_apply_var.get():
+        if easy_apply_only:
             params.append("f_AL=true")
-        url = base_url + "&".join(params)
-        self.job_apply_url = url
+        return base_url + "&".join(params)
+
+    def update_job_apply_url(self):
+        try:
+            with open("DB/form_autofill.json", "r", encoding="utf-8") as f:
+                autofill = json.load(f)
+            job_title = autofill.get("textInput", {}).get("jobTitle", "")
+        except Exception:
+            job_title = ""
+        time_code = self.time_filter_code(self.timeFilter_var.get())
+        easy_apply_only = self.easy_apply_var.get()
+        self.job_apply_url = self.build_linkedin_job_url(
+            job_title, time_code, easy_apply_only
+        )
 
     def time_filter_code(self, label):
         if label == "Past 24 hours":

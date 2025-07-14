@@ -9,6 +9,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    TimeoutException,
+    StaleElementReferenceException,
+    WebDriverException
+)
 from webdriver_manager.chrome import ChromeDriverManager
 
 from .easy_apply__job import apply_to_job
@@ -54,7 +60,7 @@ class BrowserManager:
                 "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             )
             return True
-        except Exception as e:
+        except (FileNotFoundError, json.JSONDecodeError, OSError, WebDriverException) as e:
             print(f"Failed to start browser: {e}")
             return False
 
@@ -80,7 +86,7 @@ class BrowserManager:
                     print(
                         f"DEBUG: Raw titleSkipWords: {filters.get('titleSkipWords', [])}"
                     )
-                except Exception as e:
+                except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
                     print(f"DEBUG: Failed to load filters: {e}")
                     filters = {}
             else:
@@ -107,7 +113,7 @@ class BrowserManager:
             for idx, job_card in enumerate(job_cards):
                 if not should_continue():
                     print("Bot stopped by user during filtering.")
-                    return
+                    return None
                 try:
                     print(f"\nProcessing job card {idx + 1}/{len(job_cards)}")
 
@@ -124,7 +130,7 @@ class BrowserManager:
                                 f"  Job {idx + 1}: Already applied (footer: '{footer_text}') - SKIPPING"
                             )
                             continue
-                    except Exception:
+                    except NoSuchElementException:
                         pass
 
                     try:
@@ -133,7 +139,7 @@ class BrowserManager:
                             ".artdeco-entity-lockup__title .job-card-container__link",
                         )
                         print(f"  DEBUG: Found job title element with first selector")
-                    except Exception:
+                    except NoSuchElementException:
                         try:
                             job_title_el = job_card.find_element(
                                 By.CSS_SELECTOR, ".job-card-container__link"
@@ -141,7 +147,7 @@ class BrowserManager:
                             print(
                                 f"  DEBUG: Found job title element with second selector"
                             )
-                        except Exception:
+                        except NoSuchElementException:
                             print(
                                 f"  Job {idx + 1}: No job title link found - SKIPPING"
                             )
@@ -166,7 +172,7 @@ class BrowserManager:
                             .lower()
                         )
                         print(f"  Job {idx + 1}: Subtitle = '{subtitle}'")
-                    except Exception:
+                    except NoSuchElementException:
                         pass
 
                     # Check title filter words
@@ -220,7 +226,7 @@ class BrowserManager:
                         f"  Job {idx + 1}: PASSED ALL FILTERS - Adding to filtered jobs"
                     )
                     filtered_jobs.append((job_card, job_title_el))
-                except Exception as e:
+                except (NoSuchElementException, StaleElementReferenceException, WebDriverException) as e:
                     print(f"  Job {idx + 1}: Error filtering job: {e} - SKIPPING")
 
             print(
@@ -255,12 +261,12 @@ class BrowserManager:
                             By.CSS_SELECTOR,
                             ".artdeco-entity-lockup__title .job-card-container__link",
                         )
-                    except Exception:
+                    except NoSuchElementException:
                         try:
                             current_job_title_el = current_job_card.find_element(
                                 By.CSS_SELECTOR, ".job-card-container__link"
                             )
-                        except Exception:
+                        except NoSuchElementException:
                             print(
                                 f"  Job {idx + 1}: Could not re-find job title element - SKIPPING"
                             )
@@ -291,7 +297,7 @@ class BrowserManager:
                                 print(f"  Job details don't contain bad words - OK")
                         else:
                             print(f"  No bad words filter - OK")
-                    except Exception as e:
+                    except (NoSuchElementException, WebDriverException) as e:
                         print(
                             f"  Could not check job details for bad words: {e} - Proceeding anyway"
                         )
@@ -310,7 +316,7 @@ class BrowserManager:
                         # Small delay after application
                         time.sleep(1)
 
-                except Exception as e:
+                except (NoSuchElementException, StaleElementReferenceException, WebDriverException, TimeoutException) as e:
                     print(f"  Error processing filtered job {idx + 1}: {e}")
 
             print(f"\nCompleted job applications. Applied to {applied_count} jobs.")
@@ -323,12 +329,12 @@ class BrowserManager:
                     scroll_container,
                 )
                 time.sleep(1)
-            except Exception:
+            except (NoSuchElementException, WebDriverException):
                 pass
             try:
                 if not should_continue():
                     print("Bot stopped by user before next page.")
-                    return
+                    return None
                 next_btn = self.driver.find_element(
                     By.CSS_SELECTOR,
                     'button.jobs-search-pagination__button--next[aria-label*="next"]:not([disabled])',
@@ -343,9 +349,9 @@ class BrowserManager:
                     self.process_job_listings(
                         autofill_path, filters_path, should_continue
                     )
-            except Exception as e:
+            except (NoSuchElementException, WebDriverException) as e:
                 print(f"No more pages or next button not found. Finished. {e}")
-        except Exception as e:
+        except (FileNotFoundError, json.JSONDecodeError, OSError, WebDriverException, TimeoutException) as e:
             print("Error in process_job_listings:", e)
             return False
 

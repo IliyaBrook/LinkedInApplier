@@ -157,19 +157,9 @@ class MainUI:
                 job_title = autofill.get("textInput", {}).get("jobTitle", "")
                 time_code = filters.get("timeFilter", "any")
                 easy_apply_only = filters.get("easyApplyOnly", False)
-                base_url = "https://www.linkedin.com/jobs/search/?"
-                params = []
-                if job_title:
-                    params.append(f"keywords={job_title.replace(' ', '%20')}")
-                if time_code == "r86400":
-                    params.append("f_TPR=r86400")
-                elif time_code == "r604800":
-                    params.append("f_TPR=r604800")
-                elif time_code == "r2592000":
-                    params.append("f_TPR=r2592000")
-                if easy_apply_only:
-                    params.append("f_AL=true")
-                job_apply_url = base_url + "&".join(params)
+                job_apply_url = self.filters_tab.build_linkedin_job_url(
+                    job_title, time_code, easy_apply_only
+                )
                 self.browser.go_to_url(job_apply_url)
                 self.browser.process_job_listings(
                     AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run
