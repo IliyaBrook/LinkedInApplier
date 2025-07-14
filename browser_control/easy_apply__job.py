@@ -290,12 +290,32 @@ def apply_to_job(driver, autofill_data):
                     close_all_modals(driver)
                     return True
 
-                # If no form and no completion message, continue to next iteration
-                iteration += 1
-                continue
+                # Check if we're on the final step by looking for 100% progress
+                is_final_step = check_if_final_step(driver, apply_modal)
+                if is_final_step:
+                    print("✅ Detected final step (100% progress) - looking for submit button even without form")
+                else:
+                    print("Not on final step yet, but checking for action buttons anyway...")
 
-            # Process form fields
-            form_updated = process_form_fields(driver, form, autofill_data)
+                # Even without a form, check for action buttons (submit, next, etc.)
+                print("Checking for action buttons without form...")
+                next_action = find_next_action_button(driver, apply_modal)
+
+                if next_action["type"] != "none":
+                    print(f"Found action button without form: {next_action['type']}")
+                    # Don't continue the loop, let the action button handling code below process this
+                else:
+                    print("No action buttons found without form, continuing to next iteration...")
+                    iteration += 1
+                    continue
+
+            # Process form fields (only if form exists)
+            form_updated = False
+            if form:
+                form_updated = process_form_fields(driver, form, autofill_data)
+                print("Form fields processed")
+            else:
+                print("No form to process, skipping form field processing")
 
             if form_updated:
                 # Save autofill data if it was updated
@@ -391,25 +411,85 @@ def apply_to_job(driver, autofill_data):
                     pass
 
                 # Uncheck follow company checkbox if present
+                print("Unchecking follow company checkbox before submit...")
                 uncheck_follow_company_checkbox(driver)
 
                 # Scroll to submit button and submit application
-                print("Scrolling to and clicking Submit button...")
+                print("Preparing to click Submit button...")
                 try:
-                    driver.execute_script(
-                        "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
-                        submit_button,
-                    )
-                    smart_delay(1.0)
+                    # Double-check button is still valid
+                    if not submit_button.is_displayed():
+                        print("⚠️ Submit button is no longer displayed, re-finding...")
+                        next_action = find_next_action_button(driver, apply_modal)
+                        if next_action["type"] == "submit":
+                            submit_button = next_action["element"]
+                        else:
+                            print("❌ Could not re-find submit button")
+                            raise Exception("Submit button disappeared")
 
-                    # Make sure button is still clickable
-                    if not submit_button.is_enabled():
+                    # Scroll to submit button with multiple attempts
+                    print("Scrolling to Submit button...")
+                    for scroll_attempt in range(3):
+                        try:
+                            driver.execute_script(
+                                "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+                                submit_button,
+                            )
+                            smart_delay(1.0)
+
+                            if submit_button.is_displayed():
+                                print(f"✅ Submit button visible after scroll attempt {scroll_attempt + 1}")
+                                break
+                            else:
+                                print(f"⚠️ Submit button not visible after scroll attempt {scroll_attempt + 1}")
+                                if scroll_attempt < 2:
+                                    # Try alternative scroll method
+                                    driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
+                                    smart_delay(0.5)
+                        except Exception as e:
+                            print(f"Error in scroll attempt {scroll_attempt + 1}: {e}")
+
+                    # Verify button state before clicking
+                    is_enabled = submit_button.is_enabled()
+                    is_displayed = submit_button.is_displayed()
+                    print(f"Submit button state: enabled={is_enabled}, displayed={is_displayed}")
+
+                    if not is_enabled:
                         print("⚠️ Submit button is not enabled - waiting...")
                         smart_delay(2.0)
+                        is_enabled = submit_button.is_enabled()
+                        print(f"Submit button enabled after wait: {is_enabled}")
 
-                    # Click submit
-                    submit_button.click()
-                    print("✅ Submit button clicked successfully")
+                    if not is_displayed:
+                        print("⚠️ Submit button is not displayed - trying to scroll again...")
+                        driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
+                        smart_delay(1.0)
+
+                    # Try multiple click methods
+                    click_success = False
+
+                    # Method 1: Regular click
+                    try:
+                        print("Attempting regular click on Submit button...")
+                        submit_button.click()
+                        click_success = True
+                        print("✅ Submit button clicked successfully (regular click)")
+                    except Exception as e:
+                        print(f"Regular click failed: {e}")
+
+                    # Method 2: JavaScript click if regular click failed
+                    if not click_success:
+                        try:
+                            print("Attempting JavaScript click on Submit button...")
+                            driver.execute_script("arguments[0].click();", submit_button)
+                            click_success = True
+                            print("✅ Submit button clicked successfully (JavaScript click)")
+                        except Exception as e:
+                            print(f"JavaScript click failed: {e}")
+
+                    if not click_success:
+                        raise Exception("All click methods failed")
+
                     smart_delay(3.0)  # Give more time for submission to process
 
                     # Handle any save modal after submit
@@ -659,14 +739,18 @@ def process_input_fields(driver, form, autofill_data):
                         field.clear()
                         field.send_keys(autofill_val)
                         smart_delay(0.1)
-                    except:
-                        pass
+                        print(f"Filled text input '{name}' with value: {autofill_val}")
+                    except Exception as e:
+                        print(f"Failed to fill text input '{name}': {e}")
                 elif not autofill_val and name:
                     if db_section not in autofill_data:
                         autofill_data[db_section] = {}
                     if name not in autofill_data[db_section]:
                         autofill_data[db_section][name] = value or ""
                         updated = True
+                        print(f"Added new text input field to database: '{name}' = '{value or ''}'")
+                elif name:
+                    print(f"Text input '{name}' already has correct value: {value}")
 
         except Exception as e:
             print(f"Error processing input field: {e}")
@@ -728,6 +812,29 @@ def process_radio_buttons(driver, form, autofill_data):
             )
 
             if found:
+                # Try to select the stored radio button option
+                stored_selected_option = next(
+                    (o for o in found["options"] if o["selected"]),
+                    None,
+                )
+
+                if stored_selected_option and stored_selected_option["value"] != selected_value:
+                    # Find the radio button element to select
+                    for radio in radios:
+                        if radio.get_attribute("value") == stored_selected_option["value"]:
+                            try:
+                                radio.click()
+                                smart_delay(0.2)
+                                print(f"Selected radio button: {stored_selected_option['value']} for {label}")
+                                break
+                            except Exception as e:
+                                print(f"Failed to select radio button: {e}")
+                elif not stored_selected_option:
+                    print(f"No valid selection found for radio button group '{label}'")
+                else:
+                    print(f"Radio button group '{label}' already has correct value: {selected_value}")
+
+                # Update stored data
                 same_options = found["options"] == options
                 same_default = found.get("defaultValue", None) == selected_value
                 if not (same_options and same_default):
@@ -785,7 +892,7 @@ def process_dropdowns(driver, form, autofill_data):
                 options[0]["value"] if options else "",
             )
 
-            # Update autofill data
+            # Check if we have stored data for this dropdown
             if "dropdowns" not in autofill_data:
                 autofill_data["dropdowns"] = []
 
@@ -799,6 +906,30 @@ def process_dropdowns(driver, form, autofill_data):
             )
 
             if found:
+                # Try to select the stored option if it's not "Select an option"
+                stored_selected_option = next(
+                    (o for o in found["options"] if o["selected"] and o["value"] != "Select an option"),
+                    None,
+                )
+
+                if stored_selected_option and stored_selected_option["value"] != selected_value:
+                    # Find the option element to select
+                    option_elements = select.find_elements(By.TAG_NAME, "option")
+                    for option_elem in option_elements:
+                        if option_elem.get_attribute("value") == stored_selected_option["value"]:
+                            try:
+                                option_elem.click()
+                                smart_delay(0.2)
+                                print(f"Selected dropdown option: {stored_selected_option['value']} for {label}")
+                                break
+                            except Exception as e:
+                                print(f"Failed to select dropdown option: {e}")
+                elif not stored_selected_option:
+                    print(f"No valid selection found for dropdown '{label}' - still at 'Select an option'")
+                else:
+                    print(f"Dropdown '{label}' already has correct value: {selected_value}")
+
+                # Update stored data
                 same_options = found["options"] == options
                 same_default = found.get("defaultValue", None) == selected_value
                 if not (same_options and same_default):
@@ -809,6 +940,7 @@ def process_dropdowns(driver, form, autofill_data):
                 else:
                     found["count"] += 1
             else:
+                # No stored data, add new entry
                 autofill_data["dropdowns"].append(
                     {
                         "placeholderIncludes": label,
@@ -939,83 +1071,139 @@ def find_next_action_button(driver, modal):
     submit_selectors = [
         'button[aria-label="Submit application"]',
         "button[data-live-test-easy-apply-submit-button]",
-        'button[class*="artdeco-button--primary"]:contains("Submit")',
-        'button:contains("Submit application")',
-        '.artdeco-button--primary[type="button"]:contains("Submit")',
+        'button[class*="artdeco-button--primary"]',
+        'button.artdeco-button--primary',
+        'button[type="button"][class*="artdeco-button--primary"]',
+        'button.artdeco-button.artdeco-button--2.artdeco-button--primary',  # Specific structure from issue
+        'button[class*="artdeco-button"][class*="artdeco-button--primary"][type="button"]',
+    ]
+
+    # XPath selectors for text-based searches
+    submit_xpath_selectors = [
+        '//button[contains(text(), "Submit application")]',
+        '//button[contains(text(), "Submit")]',
+        '//button[contains(@aria-label, "Submit application")]',
+        '//button[@data-live-test-easy-apply-submit-button]',
+        '//button[contains(@class, "artdeco-button--primary") and contains(text(), "Submit")]',
+        '//button[contains(@class, "artdeco-button--primary") and contains(@aria-label, "Submit")]',
     ]
 
     submit_btn = None
+
+    # First try CSS selectors
     for selector in submit_selectors:
         try:
-            if ":contains(" in selector:
-                # Use XPath for text-based selectors
-                xpath_selector = f"//button[contains(text(), 'Submit')]"
-                elements = modal.find_elements(By.XPATH, xpath_selector)
-                for elem in elements:
-                    if elem.is_displayed() and (
-                        "submit" in elem.text.lower()
-                        or "submit" in elem.get_attribute("aria-label", "").lower()
-                    ):
-                        submit_btn = elem
-                        break
-            else:
-                submit_btn = modal.find_element(By.CSS_SELECTOR, selector)
-                if submit_btn and submit_btn.is_displayed():
+            submit_btn = modal.find_element(By.CSS_SELECTOR, selector)
+            if submit_btn and submit_btn.is_displayed():
+                # Verify this is actually a submit button
+                aria_label = submit_btn.get_attribute("aria-label") or ""
+                button_text = submit_btn.text.strip()
+                if ("submit" in aria_label.lower() or "submit" in button_text.lower()):
+                    print(f"Found submit button with CSS selector: {selector}")
                     break
+                else:
+                    submit_btn = None
         except:
             continue
 
+    # If CSS selectors didn't work, try XPath selectors
+    if not submit_btn:
+        for xpath_selector in submit_xpath_selectors:
+            try:
+                elements = modal.find_elements(By.XPATH, xpath_selector)
+                for elem in elements:
+                    if elem.is_displayed():
+                        submit_btn = elem
+                        print(f"Found submit button with XPath selector: {xpath_selector}")
+                        break
+                if submit_btn:
+                    break
+            except:
+                continue
+
     if submit_btn:
-        print(
-            f"Found Submit application button: {submit_btn.get_attribute('aria-label') or submit_btn.text}"
-        )
+        # Debug submit button details
+        try:
+            aria_label = submit_btn.get_attribute('aria-label') or "No aria-label"
+            button_text = submit_btn.text.strip() or "No text"
+            button_class = submit_btn.get_attribute('class') or "No class"
+            button_id = submit_btn.get_attribute('id') or "No id"
+            data_attr = submit_btn.get_attribute('data-live-test-easy-apply-submit-button') or "No data-attr"
+            is_enabled = submit_btn.is_enabled()
+            is_displayed = submit_btn.is_displayed()
+
+            print(f"✅ Found Submit application button:")
+            print(f"  - aria-label: '{aria_label}'")
+            print(f"  - text: '{button_text}'")
+            print(f"  - class: '{button_class}'")
+            print(f"  - id: '{button_id}'")
+            print(f"  - data-attr: '{data_attr}'")
+            print(f"  - enabled: {is_enabled}")
+            print(f"  - displayed: {is_displayed}")
+        except Exception as e:
+            print(f"Error getting submit button details: {e}")
 
         # Scroll to submit button to ensure it's visible
         try:
+            print("Scrolling to submit button...")
             driver.execute_script(
                 "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
                 submit_btn,
             )
-            smart_delay(0.5)
-            print("Scrolled to Submit button")
-        except:
-            pass
+            smart_delay(1.0)  # Give more time for smooth scrolling
+            print("✅ Scrolled to Submit button")
+
+            # Verify button is still visible after scroll
+            if not submit_btn.is_displayed():
+                print("⚠️ Submit button not visible after scroll, trying alternative scroll")
+                driver.execute_script("arguments[0].scrollIntoView(true);", submit_btn)
+                smart_delay(0.5)
+        except Exception as e:
+            print(f"Error scrolling to submit button: {e}")
 
         return {"type": "submit", "element": submit_btn}
 
     # Check for review button
-    review_selectors = [
+    review_css_selectors = [
         'button[aria-label="Review your application"]',
         'button[aria-label*="Review"]',
         "button[data-easy-apply-review-button]",
         "button[data-live-test-easy-apply-review-button]",
-        'button:contains("Review")',
+    ]
+
+    review_xpath_selectors = [
         '//button[contains(text(), "Review")]',
         '//button[contains(@aria-label, "Review")]',
+        '//button[@data-easy-apply-review-button]',
+        '//button[@data-live-test-easy-apply-review-button]',
     ]
 
     review_btn = None
-    for selector in review_selectors:
+
+    # First try CSS selectors
+    for selector in review_css_selectors:
         try:
-            if selector.startswith("//"):
-                elements = modal.find_elements(By.XPATH, selector)
-                for elem in elements:
-                    if elem.is_displayed():
-                        review_btn = elem
-                        break
-            elif ":contains(" in selector:
-                xpath_selector = f"//button[contains(text(), 'Review')]"
+            review_btn = modal.find_element(By.CSS_SELECTOR, selector)
+            if review_btn and review_btn.is_displayed():
+                print(f"Found review button with CSS selector: {selector}")
+                break
+        except:
+            continue
+
+    # If CSS selectors didn't work, try XPath selectors
+    if not review_btn:
+        for xpath_selector in review_xpath_selectors:
+            try:
                 elements = modal.find_elements(By.XPATH, xpath_selector)
                 for elem in elements:
                     if elem.is_displayed():
                         review_btn = elem
+                        print(f"Found review button with XPath selector: {xpath_selector}")
                         break
-            else:
-                review_btn = modal.find_element(By.CSS_SELECTOR, selector)
-                if review_btn and review_btn.is_displayed():
+                if review_btn:
                     break
-        except:
-            continue
+            except:
+                continue
 
     if review_btn:
         print(
@@ -1034,43 +1222,52 @@ def find_next_action_button(driver, modal):
         return {"type": "next", "element": review_btn}
 
     # Check for next button (generic) - improved with more selectors
-    next_selectors = [
+    next_css_selectors = [
         'button[aria-label="Continue to next step"]',  # From user's example
         "button[data-easy-apply-next-button]",  # From user's example
         "button[data-live-test-easy-apply-next-button]",  # From user's example
         'button[aria-label*="Next"]',
         'button[aria-label*="Continue"]',
-        'button:contains("Next")',
-        '.artdeco-button--primary:contains("Next")',
+        'button.artdeco-button--primary',
+    ]
+
+    next_xpath_selectors = [
         '//button[contains(text(), "Next")]',
         '//button[contains(@aria-label, "Next")]',
         '//button[contains(@aria-label, "Continue")]',
         "//button[@data-easy-apply-next-button]",
         "//button[@data-live-test-easy-apply-next-button]",
+        '//button[contains(@class, "artdeco-button--primary") and contains(text(), "Next")]',
+        '//button[contains(@class, "artdeco-button--primary") and contains(@aria-label, "Next")]',
+        '//button[contains(@class, "artdeco-button--primary") and contains(@aria-label, "Continue")]',
     ]
 
     next_btn = None
-    for selector in next_selectors:
+
+    # First try CSS selectors
+    for selector in next_css_selectors:
         try:
-            if selector.startswith("//"):
-                elements = modal.find_elements(By.XPATH, selector)
-                for elem in elements:
-                    if elem.is_displayed():
-                        next_btn = elem
-                        break
-            elif ":contains(" in selector:
-                xpath_selector = f"//button[contains(text(), 'Next')]"
+            next_btn = modal.find_element(By.CSS_SELECTOR, selector)
+            if next_btn and next_btn.is_displayed():
+                print(f"Found next button with CSS selector: {selector}")
+                break
+        except:
+            continue
+
+    # If CSS selectors didn't work, try XPath selectors
+    if not next_btn:
+        for xpath_selector in next_xpath_selectors:
+            try:
                 elements = modal.find_elements(By.XPATH, xpath_selector)
                 for elem in elements:
                     if elem.is_displayed():
                         next_btn = elem
+                        print(f"Found next button with XPath selector: {xpath_selector}")
                         break
-            else:
-                next_btn = modal.find_element(By.CSS_SELECTOR, selector)
-                if next_btn and next_btn.is_displayed():
+                if next_btn:
                     break
-        except:
-            continue
+            except:
+                continue
 
     if next_btn:
         print(
@@ -1117,7 +1314,7 @@ def uncheck_follow_company_checkbox(driver):
     Uses scrolling to ensure the checkbox is visible and handles visually-hidden inputs.
     """
     try:
-        print("Looking for follow company checkbox...")
+        print("🔍 Looking for follow company checkbox...")
 
         # First, try to find the footer section containing the checkbox
         footer_section = None
@@ -1125,9 +1322,9 @@ def uncheck_follow_company_checkbox(driver):
             footer_section = driver.find_element(
                 By.CSS_SELECTOR, ".job-details-easy-apply-footer__section"
             )
-            print("Found follow company footer section")
+            print("✅ Found follow company footer section")
         except:
-            print("Follow company footer section not found, searching in full page")
+            print("⚠️ Follow company footer section not found, searching in full page")
 
         # Try multiple selectors for the checkbox
         checkbox_selectors = [
@@ -1254,6 +1451,77 @@ def uncheck_follow_company_checkbox(driver):
 
     except Exception as e:
         print(f"Error handling follow company checkbox: {e} - continuing anyway")
+
+
+def check_if_final_step(driver, modal):
+    """
+    Check if we're on the final step by looking for 100% progress indicator.
+    Returns True if we're on the final step, False otherwise.
+    """
+    try:
+        print("🔍 Checking if we're on the final step...")
+
+        # Look for progress bar with 100% completion
+        progress_selectors = [
+            'progress[value="100"]',
+            'progress[aria-valuenow="100"]',
+            '.artdeco-completeness-meter-linear__progress-element[value="100"]',
+            'progress[max="100"][value="100"]',
+        ]
+
+        # Search in modal first, then in full page
+        search_contexts = [modal, driver]
+
+        for context in search_contexts:
+            for selector in progress_selectors:
+                try:
+                    progress_element = context.find_element(By.CSS_SELECTOR, selector)
+                    if progress_element:
+                        value = progress_element.get_attribute("value")
+                        aria_valuenow = progress_element.get_attribute("aria-valuenow")
+                        max_value = progress_element.get_attribute("max")
+
+                        print(f"Found progress element: value='{value}', aria-valuenow='{aria_valuenow}', max='{max_value}'")
+
+                        # Check if progress is at 100%
+                        if (value == "100" or aria_valuenow == "100"):
+                            print("✅ Progress is at 100% - we're on the final step!")
+                            return True
+                except:
+                    continue
+
+        # Also look for percentage text indicators
+        percentage_selectors = [
+            'span[aria-label*="100 percent"]',
+            'span:contains("100%")',
+            '.t-14:contains("100%")',
+        ]
+
+        for context in search_contexts:
+            for selector in percentage_selectors:
+                try:
+                    if ":contains(" in selector:
+                        # Use XPath for text-based search
+                        xpath_selector = '//span[contains(text(), "100%")]'
+                        elements = context.find_elements(By.XPATH, xpath_selector)
+                        for elem in elements:
+                            if elem.is_displayed():
+                                print(f"Found 100% text indicator: {elem.text}")
+                                return True
+                    else:
+                        elem = context.find_element(By.CSS_SELECTOR, selector)
+                        if elem and elem.is_displayed():
+                            print(f"Found 100% aria-label indicator: {elem.get_attribute('aria-label')}")
+                            return True
+                except:
+                    continue
+
+        print("No 100% progress indicator found - not on final step")
+        return False
+
+    except Exception as e:
+        print(f"Error checking final step: {e}")
+        return False
 
 
 def check_if_already_applied(text_content):

@@ -18,7 +18,8 @@
     "What is your salary expectations?": "20.000",
     "How many years of work experience do you have with DevOps?": "3",
     "How many years of work experience do you have with React.js?": "4",
-    "How many years of experience do you have as a Fullstack engineer?": "4"
+    "How many years of experience do you have as a Fullstack engineer?": "4",
+    "How many years of work experience do you have with JavaScript?": "4"
   },
   "radioButtons": [
     {
@@ -123,7 +124,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 13,
+      "count": 14,
       "options": [
         {
           "value": "Select an option",
@@ -401,8 +402,8 @@
           "selected": false
         },
         {
-          "value": "Cote D\u2019Ivoire (Ivory Coast) (+225)",
-          "text": "Cote D\u2019Ivoire (Ivory Coast) (+225)",
+          "value": "Cote D’Ivoire (Ivory Coast) (+225)",
+          "text": "Cote D’Ivoire (Ivory Coast) (+225)",
           "selected": false
         },
         {
@@ -1370,7 +1371,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 11,
+      "count": 12,
       "options": [
         {
           "value": "Select an option",
