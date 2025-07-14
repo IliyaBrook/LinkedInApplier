@@ -693,7 +693,7 @@ def process_form_fields(driver, form, autofill_data):
     if process_input_fields(form, autofill_data):
         updated = True
 
-    if process_radio_buttons(driver, form, autofill_data):
+    if process_radio_buttons(form, autofill_data):
         updated = True
 
     if process_dropdowns(driver, form, autofill_data):
@@ -760,7 +760,7 @@ def process_input_fields(form, autofill_data):
     return updated
 
 
-def process_radio_buttons(driver, form, autofill_data):
+def process_radio_buttons(form, autofill_data):
     """
     Process radio button fieldsets in the form.
     """
@@ -778,7 +778,7 @@ def process_radio_buttons(driver, form, autofill_data):
                 label_el = legend.find_element(
                     By.CSS_SELECTOR, 'span[aria-hidden="true"]'
                 )
-            except:
+            except NoSuchElementException:
                 pass
 
             label = label_el.text.strip() if label_el else legend.text.strip()
@@ -875,9 +875,6 @@ def process_radio_buttons(driver, form, autofill_data):
 
 
 def process_dropdowns(driver, form, autofill_data):
-    """
-    Process dropdown select elements in the form.
-    """
     updated = False
     selects = form.find_elements(By.TAG_NAME, "select")
 
@@ -1002,10 +999,10 @@ def get_field_name(field, form):
                     span = label_el.find_element(
                         By.CSS_SELECTOR, 'span[aria-hidden="true"]'
                     )
-                except:
+                except NoSuchElementException:
                     pass
                 name = span.text.strip() if span else label_el.text.strip()
-            except:
+            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
                 pass
 
     return name
@@ -1021,7 +1018,7 @@ def get_radio_label(radio, fieldset):
             By.CSS_SELECTOR, f'label[for="{radio.get_attribute("id")}"]'
         )
         radio_label = radio_label_el.text.strip()
-    except:
+    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
         pass
 
     if not radio_label:
@@ -1051,12 +1048,12 @@ def get_dropdown_label(select):
             aria_hidden = label_el.find_element(
                 By.CSS_SELECTOR, 'span[aria-hidden="true"]'
             )
-        except:
+        except NoSuchElementException:
             pass
 
         label = aria_hidden.text.strip() if aria_hidden else label_el.text.strip()
         return label
-    except:
+    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
         return f"Dropdown {int(time.time())}"
 
 
@@ -1074,10 +1071,9 @@ def find_next_action_button(driver, modal):
         )
         smart_delay(0.5)
         print("Scrolled to bottom of modal")
-    except:
+    except WebDriverException:
         pass
 
-    continue_btn = None
     try:
         continue_btn = modal.find_element(
             By.CSS_SELECTOR, 'button[aria-label="Continue applying"]'
@@ -1085,7 +1081,7 @@ def find_next_action_button(driver, modal):
         if continue_btn and continue_btn.is_displayed():
             print("Found 'Continue applying' button")
             return {"type": "continue", "element": continue_btn}
-    except:
+    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
         pass
 
     submit_selectors = [
@@ -1121,7 +1117,7 @@ def find_next_action_button(driver, modal):
                     break
                 else:
                     submit_btn = None
-        except:
+        except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
             continue
 
     if not submit_btn:
@@ -1137,7 +1133,7 @@ def find_next_action_button(driver, modal):
                         break
                 if submit_btn:
                     break
-            except:
+            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
                 continue
 
     if submit_btn:
@@ -1207,7 +1203,7 @@ def find_next_action_button(driver, modal):
             if review_btn and review_btn.is_displayed():
                 print(f"Found review button with CSS selector: {selector}")
                 break
-        except:
+        except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
             continue
 
     if not review_btn:
@@ -1223,7 +1219,7 @@ def find_next_action_button(driver, modal):
                         break
                 if review_btn:
                     break
-            except:
+            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
                 continue
 
     if review_btn:
@@ -1238,7 +1234,7 @@ def find_next_action_button(driver, modal):
             )
             smart_delay(0.5)
             print("Scrolled to Review button")
-        except:
+        except WebDriverException:
             pass
         return {"type": "next", "element": review_btn}
 
@@ -1270,7 +1266,7 @@ def find_next_action_button(driver, modal):
             if next_btn and next_btn.is_displayed():
                 print(f"Found next button with CSS selector: {selector}")
                 break
-        except:
+        except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
             continue
 
     if not next_btn:
@@ -1286,7 +1282,7 @@ def find_next_action_button(driver, modal):
                         break
                 if next_btn:
                     break
-            except:
+            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
                 continue
 
     if next_btn:
@@ -1301,7 +1297,7 @@ def find_next_action_button(driver, modal):
             )
             smart_delay(0.5)
             print("Scrolled to Next button")
-        except:
+        except WebDriverException:
             pass
         return {"type": "next", "element": next_btn}
 
@@ -1319,9 +1315,9 @@ def find_next_action_button(driver, modal):
                 print(
                     f"  Button {i+1}: aria-label='{aria_label}', text='{btn_text}', displayed={is_displayed}, class='{btn_class}'"
                 )
-            except:
+            except (StaleElementReferenceException, WebDriverException, AttributeError):
                 pass
-    except:
+    except (NoSuchElementException, StaleElementReferenceException, WebDriverException):
         pass
 
     return {"type": "none", "element": None}
@@ -1330,7 +1326,7 @@ def find_next_action_button(driver, modal):
 def uncheck_follow_company_checkbox(driver):
     """
     Uncheck the follow company checkbox if it exists and is checked.
-    Uses scrolling to ensure the checkbox is visible and handles visually-hidden inputs.
+    Uses scrolling to ensure the checkbox is visible and handles visually hidden inputs.
     """
     try:
         print("🔍 Looking for follow company checkbox...")
@@ -1341,7 +1337,7 @@ def uncheck_follow_company_checkbox(driver):
                 By.CSS_SELECTOR, ".job-details-easy-apply-footer__section"
             )
             print("✅ Found follow company footer section")
-        except:
+        except NoSuchElementException:
             print("⚠️ Follow company footer section not found, searching in full page")
 
         checkbox_selectors = [
@@ -1363,7 +1359,7 @@ def uncheck_follow_company_checkbox(driver):
                     used_selector = selector
                     print(f"Found follow company checkbox with selector: {selector}")
                     break
-            except:
+            except NoSuchElementException:
                 continue
 
         if not follow_checkbox:
@@ -1379,7 +1375,7 @@ def uncheck_follow_company_checkbox(driver):
             print(
                 f"Checkbox details: id='{checkbox_id}', class='{checkbox_classes}', visually_hidden={is_hidden}"
             )
-        except:
+        except (StaleElementReferenceException, WebDriverException, AttributeError):
             is_hidden = False
 
         is_checked = follow_checkbox.is_selected()
@@ -1415,7 +1411,7 @@ def uncheck_follow_company_checkbox(driver):
                             if label_element:
                                 print(f"Found label with selector: {label_selector}")
                                 break
-                        except:
+                        except NoSuchElementException:
                             continue
 
                     if label_element:
@@ -1498,7 +1494,7 @@ def check_if_final_step(driver, modal):
                         if value == "100" or aria_valuenow == "100":
                             print("✅ Progress is at 100% - we're on the final step!")
                             return True
-                except:
+                except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
                     continue
 
         percentage_selectors = [
@@ -1525,7 +1521,7 @@ def check_if_final_step(driver, modal):
                                 f"Found 100% aria-label indicator: {elem.get_attribute('aria-label')}"
                             )
                             return True
-                except:
+                except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
                     continue
 
         print("No 100% progress indicator found - not on final step")
