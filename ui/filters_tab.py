@@ -20,9 +20,18 @@ class FiltersTab:
         self.update_job_apply_url()
 
     def create_widgets(self):
-        main_canvas = tk.Canvas(self.frame)
+        # Create main container for the entire tab
+        main_container = ttk.Frame(self.frame)
+        main_container.pack(fill="both", expand=True)
+
+        # Create scrollable area container
+        scroll_container = ttk.Frame(main_container)
+        scroll_container.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Create canvas and scrollbar for scrollable content
+        main_canvas = tk.Canvas(scroll_container)
         scrollbar = ttk.Scrollbar(
-            self.frame, orient="vertical", command=main_canvas.yview
+            scroll_container, orient="vertical", command=main_canvas.yview
         )
         scrollable_frame = ttk.Frame(main_canvas)
 
@@ -34,26 +43,31 @@ class FiltersTab:
         main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         main_canvas.configure(yscrollcommand=scrollbar.set)
 
+        # Create container for filter controls (Easy Apply and Time Filter)
+        filter_controls_container = ttk.Frame(scrollable_frame)
+        filter_controls_container.pack(fill="x", padx=10, pady=10)
+
         # Time Filter and Easy Apply section
-        filter_controls_frame = ttk.Frame(scrollable_frame)
-        filter_controls_frame.pack(fill="x", padx=(20, 0), pady=(10, 10))
+        filter_controls_frame = ttk.Frame(filter_controls_container)
+        filter_controls_frame.pack(fill="x")
 
         # Left column for Easy Apply
-        easy_apply_frame = ttk.LabelFrame(filter_controls_frame, text="Application Type", padding=10)
-        easy_apply_frame.pack(side="left", padx=(0, 20), fill="both")
+        easy_apply_frame = ttk.Frame(filter_controls_frame)
+        easy_apply_frame.pack(side="left", padx=(0, 20))
 
         self.easy_apply_var = tk.BooleanVar(value=False)
         self.easy_apply_checkbox = ttk.Checkbutton(
-            easy_apply_frame, 
-            text="Easy apply only", 
+            easy_apply_frame,
+            text="Easy apply only",
             variable=self.easy_apply_var
         )
         self.easy_apply_checkbox.pack(anchor="w", pady=5)
 
         # Right column for Time Filter
-        time_filter_frame = ttk.LabelFrame(filter_controls_frame, text="Time Filter", padding=10)
-        time_filter_frame.pack(side="left", fill="both")
+        time_filter_frame = ttk.Frame(filter_controls_frame)
+        time_filter_frame.pack(side="left")
 
+        ttk.Label(time_filter_frame, text="Time Filter").pack(anchor="w")
         self.timeFilter_combo = ttk.Combobox(
             time_filter_frame,
             textvariable=self.timeFilter_var,
@@ -74,8 +88,12 @@ class FiltersTab:
 
         ttk.Separator(scrollable_frame, orient="horizontal").pack(fill="x", pady=10)
 
+        # Create parent container for all filter sections
+        filters_parent_container = ttk.Frame(scrollable_frame)
+        filters_parent_container.pack(fill="both", expand=True, padx=10, pady=5)
+
         # Create horizontal container for filter sections
-        filters_container = ttk.Frame(scrollable_frame)
+        filters_container = ttk.Frame(filters_parent_container)
         filters_container.pack(fill="x", pady=5)
 
         self.create_word_list_section(filters_container, "Bad Words", "badWords")
@@ -86,12 +104,20 @@ class FiltersTab:
             filters_container, "Title Skip Words", "titleSkipWords"
         )
 
-        ttk.Button(
-            scrollable_frame, text="Save Filters", command=self.save_filters
-        ).pack(pady=15)
-
         main_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+        # Create fixed button container outside scroll area
+        button_container = ttk.Frame(main_container)
+        button_container.pack(fill="x", padx=10, pady=10)
+
+        # Add separator above button
+        ttk.Separator(button_container, orient="horizontal").pack(fill="x", pady=(0, 10))
+
+        # Save Filters button - now outside scroll area and always visible
+        ttk.Button(
+            button_container, text="Save Filters", command=self.save_filters
+        ).pack(pady=5)
 
         def _on_mousewheel(event):
             main_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")

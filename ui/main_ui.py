@@ -215,7 +215,7 @@ class MainUI:
 def run():
     root = ThemedTk(theme="arc")
     window_width = 750
-    window_height = 700
+    window_height = 750
 
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()

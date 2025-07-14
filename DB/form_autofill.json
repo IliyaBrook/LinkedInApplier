@@ -13,13 +13,12 @@
     "Last name": "Brook",
     "City": "Tel Aviv",
     "How many years of work experience do you have with C#?": "0",
-    "How many years of work experience do you have with Real-Time Operating Systems (RTOS)?": "0",
     "How many years of work experience do you have with Embedded Systems?": "2",
     "How many years of experience do you have?": "4",
     "What is your salary expectations?": "20.000",
     "How many years of work experience do you have with DevOps?": "3",
     "How many years of work experience do you have with React.js?": "4",
-    "How many years of work experience do you have with Agile Software Development?": "2"
+    "How many years of experience do you have as a Fullstack engineer?": "4"
   },
   "radioButtons": [
     {
@@ -71,7 +70,7 @@
     {
       "placeholderIncludes": "Have you completed the following level of education: Bachelor's Degree?",
       "defaultValue": "No",
-      "count": 1,
+      "count": 2,
       "createdAt": 1752446865235,
       "options": [
         {
@@ -124,7 +123,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 12,
+      "count": 13,
       "options": [
         {
           "value": "Select an option",
@@ -402,8 +401,8 @@
           "selected": false
         },
         {
-          "value": "Cote D’Ivoire (Ivory Coast) (+225)",
-          "text": "Cote D’Ivoire (Ivory Coast) (+225)",
+          "value": "Cote D\u2019Ivoire (Ivory Coast) (+225)",
+          "text": "Cote D\u2019Ivoire (Ivory Coast) (+225)",
           "selected": false
         },
         {
@@ -1371,7 +1370,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 10,
+      "count": 11,
       "options": [
         {
           "value": "Select an option",
@@ -1420,6 +1419,28 @@
     },
     {
       "placeholderIncludes": "Are you comfortable working on-site in Rishon LeZion?",
+      "count": 1,
+      "options": [
+        {
+          "value": "Select an option",
+          "text": "Select an option",
+          "selected": true
+        },
+        {
+          "value": "Yes",
+          "text": "Yes",
+          "selected": false
+        },
+        {
+          "value": "No",
+          "text": "No",
+          "selected": false
+        }
+      ],
+      "defaultValue": "Select an option"
+    },
+    {
+      "placeholderIncludes": "Do you have experience with one of the following languages- Java-Script/Type-Script over Node.js?",
       "count": 1,
       "options": [
         {
