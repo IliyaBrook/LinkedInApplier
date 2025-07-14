@@ -34,22 +34,16 @@ class FiltersTab:
         main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         main_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.create_word_list_section(scrollable_frame, "Bad Words", "badWords")
-        self.create_word_list_section(
-            scrollable_frame, "Title Filter Words", "titleFilterWords"
-        )
-        self.create_word_list_section(
-            scrollable_frame, "Title Skip Words", "titleSkipWords"
-        )
+        # Time Filter section
+        time_filter_frame = ttk.Frame(scrollable_frame)
+        time_filter_frame.pack(fill="x", padx=(20, 0), pady=(10, 10))
 
-        ttk.Separator(scrollable_frame, orient="horizontal").pack(fill="x", pady=10)
-
-        ttk.Label(scrollable_frame, text="Time Filter").pack(anchor="w")
+        ttk.Label(time_filter_frame, text="Time Filter").pack(anchor="w")
         self.timeFilter_combo = ttk.Combobox(
-            scrollable_frame,
+            time_filter_frame,
             textvariable=self.timeFilter_var,
             state="readonly",
-            width=30,
+            width=20,
         )
         self.timeFilter_combo["values"] = (
             "Any Time",
@@ -57,9 +51,24 @@ class FiltersTab:
             "Past Week",
             "Past Month",
         )
-        self.timeFilter_combo.pack(fill="x", pady=(0, 10))
+        self.timeFilter_combo.pack(anchor="w")
+
         self.timeFilter_combo.bind(
             "<<ComboboxSelected>>", lambda e: self.on_time_filter_change()
+        )
+
+        ttk.Separator(scrollable_frame, orient="horizontal").pack(fill="x", pady=10)
+
+        # Create horizontal container for filter sections
+        filters_container = ttk.Frame(scrollable_frame)
+        filters_container.pack(fill="x", pady=5)
+
+        self.create_word_list_section(filters_container, "Bad Words", "badWords")
+        self.create_word_list_section(
+            filters_container, "Title Filter Words", "titleFilterWords"
+        )
+        self.create_word_list_section(
+            filters_container, "Title Skip Words", "titleSkipWords"
         )
 
         self.easy_apply_var = tk.BooleanVar(value=False)
@@ -82,7 +91,7 @@ class FiltersTab:
 
     def create_word_list_section(self, parent, title, field_type):
         section_frame = ttk.LabelFrame(parent, text=title, padding=10)
-        section_frame.pack(fill="x", pady=5)
+        section_frame.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
         list_frame = ttk.Frame(section_frame)
         list_frame.pack(fill="x")
