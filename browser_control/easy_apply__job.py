@@ -1119,10 +1119,20 @@ def find_next_action_button(driver, modal):
 def uncheck_follow_company_checkbox(driver):
     """
     Uncheck the follow company checkbox if it exists and is checked.
-    Uses scrolling to ensure the checkbox is visible.
+    Uses scrolling to ensure the checkbox is visible and handles visually-hidden inputs.
     """
     try:
         print("Looking for follow company checkbox...")
+
+        # First, try to find the footer section containing the checkbox
+        footer_section = None
+        try:
+            footer_section = driver.find_element(
+                By.CSS_SELECTOR, ".job-details-easy-apply-footer__section"
+            )
+            print("Found follow company footer section")
+        except:
+            print("Follow company footer section not found, searching in full page")
 
         # Try multiple selectors for the checkbox
         checkbox_selectors = [
@@ -1135,16 +1145,34 @@ def uncheck_follow_company_checkbox(driver):
         follow_checkbox = None
         used_selector = None
 
+        search_context = footer_section if footer_section else driver
+
         for selector in checkbox_selectors:
-            follow_checkbox = wait_for_element(driver, selector, timeout=3)
-            if follow_checkbox:
-                used_selector = selector
-                print(f"Found follow company checkbox with selector: {selector}")
-                break
+            try:
+                follow_checkbox = search_context.find_element(By.CSS_SELECTOR, selector)
+                if follow_checkbox:
+                    used_selector = selector
+                    print(f"Found follow company checkbox with selector: {selector}")
+                    break
+            except:
+                continue
 
         if not follow_checkbox:
             print("Follow company checkbox not found - skipping")
             return
+
+        # Get checkbox info for debugging
+        try:
+            checkbox_classes = follow_checkbox.get_attribute("class") or "No class"
+            checkbox_id = follow_checkbox.get_attribute("id") or "No id"
+            is_hidden = (
+                "visually-hidden" in checkbox_classes or "hidden" in checkbox_classes
+            )
+            print(
+                f"Checkbox details: id='{checkbox_id}', class='{checkbox_classes}', visually_hidden={is_hidden}"
+            )
+        except:
+            is_hidden = False
 
         # Check if checkbox is checked
         is_checked = follow_checkbox.is_selected()
@@ -1153,22 +1181,79 @@ def uncheck_follow_company_checkbox(driver):
         if is_checked:
             print("Unchecking follow company checkbox...")
 
-            # Scroll to checkbox first
+            # Scroll to the footer section or checkbox first
+            scroll_target = footer_section if footer_section else follow_checkbox
             driver.execute_script(
                 "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
-                follow_checkbox,
+                scroll_target,
             )
-            smart_delay(0.5)
+            smart_delay(0.8)
+            print("Scrolled to follow company section")
 
-            # Click to uncheck
-            follow_checkbox.click()
-            smart_delay(0.3)
+            # If checkbox is visually hidden, click the label instead
+            if is_hidden or not follow_checkbox.is_displayed():
+                print("Checkbox is visually hidden, looking for label to click...")
+                try:
+                    # Find the label element
+                    label_selectors = [
+                        f"label[for='{follow_checkbox.get_attribute('id')}']",
+                        "label[for='follow-company-checkbox']",
+                        ".job-details-easy-apply-footer__section label",
+                    ]
+
+                    label_element = None
+                    for label_selector in label_selectors:
+                        try:
+                            label_element = search_context.find_element(
+                                By.CSS_SELECTOR, label_selector
+                            )
+                            if label_element:
+                                print(f"Found label with selector: {label_selector}")
+                                break
+                        except:
+                            continue
+
+                    if label_element:
+                        print("Clicking label to uncheck hidden checkbox...")
+                        label_element.click()
+                        smart_delay(0.5)
+                    else:
+                        print("Label not found, trying to click checkbox directly...")
+                        driver.execute_script("arguments[0].click();", follow_checkbox)
+                        smart_delay(0.5)
+
+                except Exception as e:
+                    print(f"Error clicking label: {e}, trying direct click...")
+                    driver.execute_script("arguments[0].click();", follow_checkbox)
+                    smart_delay(0.5)
+            else:
+                # Checkbox is visible, click it directly
+                print("Clicking visible checkbox...")
+                follow_checkbox.click()
+                smart_delay(0.5)
 
             # Verify it was unchecked
-            if not follow_checkbox.is_selected():
-                print("✅ Successfully unchecked follow company checkbox")
-            else:
-                print("⚠️ Checkbox might still be checked")
+            smart_delay(0.3)
+            try:
+                is_still_checked = follow_checkbox.is_selected()
+                if not is_still_checked:
+                    print("✅ Successfully unchecked follow company checkbox")
+                else:
+                    print("⚠️ Checkbox might still be checked, trying one more time...")
+                    # Try one more time with different method
+                    if is_hidden:
+                        driver.execute_script(
+                            "arguments[0].checked = false;", follow_checkbox
+                        )
+                    else:
+                        follow_checkbox.click()
+                    smart_delay(0.3)
+                    if not follow_checkbox.is_selected():
+                        print("✅ Successfully unchecked on second attempt")
+                    else:
+                        print("⚠️ Could not uncheck checkbox - proceeding anyway")
+            except Exception as e:
+                print(f"Could not verify checkbox state: {e} - proceeding anyway")
         else:
             print("✅ Follow company checkbox already unchecked")
 
