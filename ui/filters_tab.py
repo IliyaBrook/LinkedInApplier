@@ -39,8 +39,8 @@ class FiltersTab:
         filter_controls_frame.pack(fill="x", padx=(20, 0), pady=(10, 10))
 
         # Left column for Easy Apply
-        easy_apply_frame = ttk.Frame(filter_controls_frame)
-        easy_apply_frame.pack(side="left", padx=(0, 20))
+        easy_apply_frame = ttk.LabelFrame(filter_controls_frame, text="Application Type", padding=10)
+        easy_apply_frame.pack(side="left", padx=(0, 20), fill="both")
 
         self.easy_apply_var = tk.BooleanVar(value=False)
         self.easy_apply_checkbox = ttk.Checkbutton(
@@ -51,10 +51,9 @@ class FiltersTab:
         self.easy_apply_checkbox.pack(anchor="w", pady=5)
 
         # Right column for Time Filter
-        time_filter_frame = ttk.Frame(filter_controls_frame)
-        time_filter_frame.pack(side="left")
+        time_filter_frame = ttk.LabelFrame(filter_controls_frame, text="Time Filter", padding=10)
+        time_filter_frame.pack(side="left", fill="both")
 
-        ttk.Label(time_filter_frame, text="Time Filter").pack(anchor="w")
         self.timeFilter_combo = ttk.Combobox(
             time_filter_frame,
             textvariable=self.timeFilter_var,
