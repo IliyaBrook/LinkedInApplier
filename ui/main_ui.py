@@ -1,12 +1,14 @@
+import json
 import os
 import threading
 from tkinter import ttk, messagebox
+
 from ttkthemes import ThemedTk
-from .filters_tab import FiltersTab
+
+from browser_control.browser_manager import BrowserManager
 from ui.autofill_tab import AutofillTab
 from ui.browser_tab import BrowserTab
-from browser_control.browser_manager import BrowserManager
-import json
+from .filters_tab import FiltersTab
 
 DB_DIR = "DB"
 FILTERS_FILE = os.path.join(DB_DIR, "user_filters.json")
@@ -212,6 +214,7 @@ class MainUI:
         if self.start_btn is not None:
             self.start_btn.config(text="Start")
 
+
 def run():
     root = ThemedTk(theme="arc")
     window_width = 750
@@ -226,5 +229,5 @@ def run():
     root.geometry(f"{window_width}x{window_height}+{x}+{y}")
     root.title("LinkedIn Easy Apply Bot")
 
-    app = MainUI(root)
+    MainUI(root)
     root.mainloop()

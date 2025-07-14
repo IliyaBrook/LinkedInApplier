@@ -16,17 +16,12 @@ from browser_control.browser_utils import (
 
 
 def apply_to_job(driver, autofill_data):
-    """
-    Apply to a job using Easy Apply with improved modal handling and speed.
-    Based on Chrome extension logic.
-    """
     try:
-        # First, handle any existing save modals
+
         if handle_save_application_modal(driver):
             print("Save modal handled before starting application")
             return True
 
-        # Check if already applied (like in Chrome extension)
         already_applied_element = wait_for_element(
             driver, ".artdeco-inline-feedback__message", timeout=2
         )
@@ -36,11 +31,8 @@ def apply_to_job(driver, autofill_data):
                 print(f"Already applied to this job: {text_content}")
                 return True
 
-        # Find the Easy Apply button using multiple selectors (updated based on real HTML structure)
         easy_apply_btn = None
 
-        # First, try to find the detail section
-        detail_section = None
         try:
             detail_section = driver.find_element(
                 By.CSS_SELECTOR, ".scaffold-layout__detail"
@@ -50,15 +42,14 @@ def apply_to_job(driver, autofill_data):
             print("scaffold-layout__detail section not found, searching in full page")
             detail_section = driver
 
-        # Try different selectors for the Easy Apply button - updated based on real HTML structure
         selectors = [
-            "#jobs-apply-button-id",  # Direct ID selector (most reliable)
-            "button[aria-label*='Easy Apply']",  # Contains "Easy Apply" (not exact match)
-            ".jobs-apply-button",  # Class selector from example
-            "button[class*='jobs-apply-button']",  # Any button with jobs-apply-button in class
+            "#jobs-apply-button-id",
+            "button[aria-label*='Easy Apply']",
+            ".jobs-apply-button",
+            "button[class*='jobs-apply-button']",
             ".jobs-apply-button--top-card",
             "button[data-control-name='jobdetails_topcard_inapply']",
-            "//button[contains(@aria-label, 'Easy Apply')]",  # XPath with contains
+            "//button[contains(@aria-label, 'Easy Apply')]",
             "//button[contains(@class, 'jobs-apply-button') and contains(., 'Easy Apply')]",
         ]
 
@@ -74,7 +65,7 @@ def apply_to_job(driver, autofill_data):
                             driver, selector, timeout=2, by=By.XPATH
                         )
                     else:
-                        # For XPath in a specific context, need to adjust
+
                         easy_apply_btn = detail_section.find_elements(
                             By.XPATH,
                             ".//button[contains(@aria-label, 'Easy Apply') or contains(., 'Easy Apply')]",
@@ -94,7 +85,7 @@ def apply_to_job(driver, autofill_data):
                             easy_apply_btn = None
 
                 if easy_apply_btn:
-                    # Verify this is actually "Easy Apply" and not regular "Apply"
+
                     aria_label = easy_apply_btn.get_attribute("aria-label") or ""
                     button_text = easy_apply_btn.text.strip()
 
@@ -102,7 +93,6 @@ def apply_to_job(driver, autofill_data):
                         f"Found button with selector #{i+1}: aria-label='{aria_label}', text='{button_text}'"
                     )
 
-                    # Check if it's Easy Apply (not regular Apply)
                     if (
                         "easy apply" in aria_label.lower()
                         or "easy apply" in button_text.lower()
@@ -132,12 +122,11 @@ def apply_to_job(driver, autofill_data):
         if not easy_apply_btn:
             print("Easy Apply button not found on job page")
 
-            # Debug: show what buttons are available in a detail section
             try:
                 search_context = detail_section if detail_section != driver else driver
                 all_buttons = search_context.find_elements(By.TAG_NAME, "button")
                 print(f"Found {len(all_buttons)} buttons in detail section:")
-                for btn in all_buttons[:10]:  # Show the first 10 buttons
+                for btn in all_buttons[:10]:
                     try:
                         aria_label = btn.get_attribute("aria-label") or "No aria-label"
                         btn_class = btn.get_attribute("class") or "No class"
@@ -155,12 +144,11 @@ def apply_to_job(driver, autofill_data):
 
         print(f"Clicking Easy Apply button...")
         easy_apply_btn.click()
-        smart_delay(2.0)  # Give more time for modal to appear
+        smart_delay(2.0)
 
-        # Debug what appears after clicking
         print("Checking what appeared after clicking Easy Apply...")
         try:
-            # Check for any new elements that might be modals
+
             potential_modals = driver.find_elements(
                 By.CSS_SELECTOR,
                 "[class*='modal'], [class*='dialog'], [role='dialog'], [data-test-modal], .artdeco-modal",
@@ -183,19 +171,17 @@ def apply_to_job(driver, autofill_data):
         except Exception as e:
             print(f"Could not debug potential modals: {e}")
 
-        # Main application loop with timeout
         max_iterations = 10
         iteration = 0
 
         print(f"Starting main application loop...")
 
         while iteration < max_iterations:
-            # Check for save modal at start of each iteration
+
             if handle_save_application_modal(driver):
                 print("Save modal handled during application process")
                 return True
 
-            # Try different selectors for modal windows
             modal_selectors = [
                 ".artdeco-modal",
                 "[data-test-modal]",
@@ -220,7 +206,6 @@ def apply_to_job(driver, autofill_data):
                     f"No modal found with any selector after {iteration + 1} attempts"
                 )
 
-                # Debug: show what's on the page
                 try:
                     print("Debugging - looking for any modal-like elements:")
                     all_modals = driver.find_elements(
@@ -228,7 +213,7 @@ def apply_to_job(driver, autofill_data):
                         "[class*='modal'], [class*='dialog'], [role='dialog']",
                     )
                     print(f"Found {len(all_modals)} modal-like elements:")
-                    for i, modal in enumerate(all_modals[:5]):  # Show first 5
+                    for i, modal in enumerate(all_modals[:5]):
                         try:
                             classes = modal.get_attribute("class") or "No class"
                             role = modal.get_attribute("role") or "No role"
@@ -241,7 +226,6 @@ def apply_to_job(driver, autofill_data):
                 except Exception as e:
                     print(f"Could not debug modals: {e}")
 
-                # Check if the application was already submitted
                 success_messages = wait_for_elements(
                     driver, '[data-test-modal=""]', timeout=2
                 )
@@ -255,7 +239,6 @@ def apply_to_job(driver, autofill_data):
                             close_all_modals(driver)
                             return True
 
-                # If still no modal after reasonable time, break
                 if iteration >= 3:
                     print(
                         "No application modal found after multiple attempts - this might be an error"
@@ -268,7 +251,6 @@ def apply_to_job(driver, autofill_data):
 
             print(f"Modal found! Processing application form...")
 
-            # Find form within modal
             form = None
             try:
                 form = apply_modal.find_element(By.CSS_SELECTOR, "form")
@@ -280,7 +262,6 @@ def apply_to_job(driver, autofill_data):
             if not form:
                 print("No form found in modal, checking for completion messages...")
 
-                # Check if application is already complete
                 modal_text = apply_modal.text.lower()
                 if any(
                     keyword in modal_text
@@ -290,26 +271,29 @@ def apply_to_job(driver, autofill_data):
                     close_all_modals(driver)
                     return True
 
-                # Check if we're on the final step by looking for 100% progress
                 is_final_step = check_if_final_step(driver, apply_modal)
                 if is_final_step:
-                    print("✅ Detected final step (100% progress) - looking for submit button even without form")
+                    print(
+                        "✅ Detected final step (100% progress) - looking for submit button even without form"
+                    )
                 else:
-                    print("Not on final step yet, but checking for action buttons anyway...")
+                    print(
+                        "Not on final step yet, but checking for action buttons anyway..."
+                    )
 
-                # Even without a form, check for action buttons (submit, next, etc.)
                 print("Checking for action buttons without form...")
                 next_action = find_next_action_button(driver, apply_modal)
 
                 if next_action["type"] != "none":
                     print(f"Found action button without form: {next_action['type']}")
-                    # Don't continue the loop, let the action button handling code below process this
+
                 else:
-                    print("No action buttons found without form, continuing to next iteration...")
+                    print(
+                        "No action buttons found without form, continuing to next iteration..."
+                    )
                     iteration += 1
                     continue
 
-            # Process form fields (only if form exists)
             form_updated = False
             if form:
                 form_updated = process_form_fields(driver, form, autofill_data)
@@ -318,21 +302,19 @@ def apply_to_job(driver, autofill_data):
                 print("No form to process, skipping form field processing")
 
             if form_updated:
-                # Save autofill data if it was updated
+
                 with open("DB/form_autofill.json", "w", encoding="utf-8") as f:
                     json.dump(autofill_data, f, ensure_ascii=False, indent=2)
 
-            # Look for next action buttons
             next_action = find_next_action_button(driver, apply_modal)
 
             if next_action["type"] == "none":
                 print(f"❌ No action button found in iteration {iteration + 1}")
 
-                # Try scrolling and looking again before giving up
-                if iteration < 2:  # Only retry for first 2 iterations
+                if iteration < 2:
                     print("Retrying button search after scrolling...")
                     try:
-                        # Try scrolling to different parts of the modal
+
                         driver.execute_script(
                             "arguments[0].scrollTop = 0;", apply_modal
                         )
@@ -350,7 +332,6 @@ def apply_to_job(driver, autofill_data):
                         )
                         smart_delay(1.0)
 
-                        # Try finding buttons again
                         next_action = find_next_action_button(driver, apply_modal)
 
                         if next_action["type"] != "none":
@@ -360,7 +341,6 @@ def apply_to_job(driver, autofill_data):
                     except Exception as e:
                         print(f"Error during retry: {e}")
 
-                # If still no button found, check if the application might be complete
                 if next_action["type"] == "none":
                     try:
                         modal_text = apply_modal.text.lower()
@@ -396,10 +376,8 @@ def apply_to_job(driver, autofill_data):
             if next_action["type"] == "submit":
                 print("Found submit button, attempting to submit application")
 
-                # Get the submit button
                 submit_button = next_action["element"]
 
-                # First, scroll to the bottom of the modal to ensure all elements are visible
                 try:
                     driver.execute_script(
                         "arguments[0].scrollTop = arguments[0].scrollHeight;",
@@ -410,14 +388,12 @@ def apply_to_job(driver, autofill_data):
                 except:
                     pass
 
-                # Uncheck follow company checkbox if present
                 print("Unchecking follow company checkbox before submit...")
                 uncheck_follow_company_checkbox(driver)
 
-                # Scroll to submit button and submit application
                 print("Preparing to click Submit button...")
                 try:
-                    # Double-check button is still valid
+
                     if not submit_button.is_displayed():
                         print("⚠️ Submit button is no longer displayed, re-finding...")
                         next_action = find_next_action_button(driver, apply_modal)
@@ -427,7 +403,6 @@ def apply_to_job(driver, autofill_data):
                             print("❌ Could not re-find submit button")
                             raise Exception("Submit button disappeared")
 
-                    # Scroll to submit button with multiple attempts
                     print("Scrolling to Submit button...")
                     for scroll_attempt in range(3):
                         try:
@@ -438,21 +413,29 @@ def apply_to_job(driver, autofill_data):
                             smart_delay(1.0)
 
                             if submit_button.is_displayed():
-                                print(f"✅ Submit button visible after scroll attempt {scroll_attempt + 1}")
+                                print(
+                                    f"✅ Submit button visible after scroll attempt {scroll_attempt + 1}"
+                                )
                                 break
                             else:
-                                print(f"⚠️ Submit button not visible after scroll attempt {scroll_attempt + 1}")
+                                print(
+                                    f"⚠️ Submit button not visible after scroll attempt {scroll_attempt + 1}"
+                                )
                                 if scroll_attempt < 2:
-                                    # Try alternative scroll method
-                                    driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
+
+                                    driver.execute_script(
+                                        "arguments[0].scrollIntoView(true);",
+                                        submit_button,
+                                    )
                                     smart_delay(0.5)
                         except Exception as e:
                             print(f"Error in scroll attempt {scroll_attempt + 1}: {e}")
 
-                    # Verify button state before clicking
                     is_enabled = submit_button.is_enabled()
                     is_displayed = submit_button.is_displayed()
-                    print(f"Submit button state: enabled={is_enabled}, displayed={is_displayed}")
+                    print(
+                        f"Submit button state: enabled={is_enabled}, displayed={is_displayed}"
+                    )
 
                     if not is_enabled:
                         print("⚠️ Submit button is not enabled - waiting...")
@@ -461,14 +444,16 @@ def apply_to_job(driver, autofill_data):
                         print(f"Submit button enabled after wait: {is_enabled}")
 
                     if not is_displayed:
-                        print("⚠️ Submit button is not displayed - trying to scroll again...")
-                        driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
+                        print(
+                            "⚠️ Submit button is not displayed - trying to scroll again..."
+                        )
+                        driver.execute_script(
+                            "arguments[0].scrollIntoView(true);", submit_button
+                        )
                         smart_delay(1.0)
 
-                    # Try multiple click methods
                     click_success = False
 
-                    # Method 1: Regular click
                     try:
                         print("Attempting regular click on Submit button...")
                         submit_button.click()
@@ -477,27 +462,28 @@ def apply_to_job(driver, autofill_data):
                     except Exception as e:
                         print(f"Regular click failed: {e}")
 
-                    # Method 2: JavaScript click if regular click failed
                     if not click_success:
                         try:
                             print("Attempting JavaScript click on Submit button...")
-                            driver.execute_script("arguments[0].click();", submit_button)
+                            driver.execute_script(
+                                "arguments[0].click();", submit_button
+                            )
                             click_success = True
-                            print("✅ Submit button clicked successfully (JavaScript click)")
+                            print(
+                                "✅ Submit button clicked successfully (JavaScript click)"
+                            )
                         except Exception as e:
                             print(f"JavaScript click failed: {e}")
 
                     if not click_success:
                         raise Exception("All click methods failed")
 
-                    smart_delay(3.0)  # Give more time for submission to process
+                    smart_delay(3.0)
 
-                    # Handle any save modal after submit
                     if handle_save_application_modal(driver):
                         print("Save modal handled after submit")
                         return True
 
-                    # Check for success message
                     try:
                         success_indicators = [
                             "application sent",
@@ -519,7 +505,6 @@ def apply_to_job(driver, autofill_data):
                     except:
                         pass
 
-                    # Close any remaining modals
                     close_all_modals(driver)
                     return True
 
@@ -533,7 +518,6 @@ def apply_to_job(driver, autofill_data):
 
                 next_button = next_action["element"]
 
-                # Debug button information
                 try:
                     button_text = next_button.text.strip()
                     button_aria = (
@@ -555,15 +539,14 @@ def apply_to_job(driver, autofill_data):
                     pass
 
                 try:
-                    # Scroll to the button location first
+
                     print("Scrolling to Next/Review button...")
                     driver.execute_script(
                         "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
                         next_button,
                     )
-                    smart_delay(1.0)  # Give more time for scroll
+                    smart_delay(1.0)
 
-                    # Check if button is still enabled and visible
                     if not next_button.is_enabled():
                         print("⚠️ Next/Review button is not enabled, waiting...")
                         smart_delay(2.0)
@@ -571,18 +554,15 @@ def apply_to_job(driver, autofill_data):
                     if not next_button.is_displayed():
                         print("⚠️ Next/Review button is not visible after scroll")
 
-                    # Try clicking the button
                     print("Attempting to click Next/Review button...")
                     next_button.click()
                     print("✅ Next/Review button clicked successfully")
-                    smart_delay(2.0)  # Give more time for page transition
+                    smart_delay(2.0)
 
-                    # Handle save modal after next
                     if handle_save_application_modal(driver):
                         print("Save modal handled after next")
                         return True
 
-                    # Check for discard button (indicates we should terminate)
                     discard_buttons = wait_for_elements(
                         driver, "button[data-test-dialog-secondary-btn]", timeout=2
                     )
@@ -592,7 +572,6 @@ def apply_to_job(driver, autofill_data):
                             terminate_job_modal(driver)
                             return False
 
-                    # Verify that we moved to next step by checking if modal content changed
                     try:
                         new_modal = wait_for_element(
                             driver, ".artdeco-modal", timeout=3
@@ -609,7 +588,6 @@ def apply_to_job(driver, autofill_data):
                 except Exception as e:
                     print(f"❌ Error clicking next button: {e}")
 
-                    # Debug: show what buttons are available now
                     try:
                         current_modal = wait_for_element(
                             driver, ".artdeco-modal", timeout=2
@@ -662,11 +640,8 @@ def apply_to_job(driver, autofill_data):
                     terminate_job_modal(driver)
                     return False
 
-            # If we reach here with next_action["type"] == "none", it was already handled above
-            # Continue to next iteration
             iteration += 1
 
-        # Final cleanup
         close_all_modals(driver)
         return True
 
@@ -685,15 +660,12 @@ def process_form_fields(driver, form, autofill_data):
     """
     updated = False
 
-    # Process input fields
     if process_input_fields(driver, form, autofill_data):
         updated = True
 
-    # Process radio buttons
     if process_radio_buttons(driver, form, autofill_data):
         updated = True
 
-    # Process dropdowns
     if process_dropdowns(driver, form, autofill_data):
         updated = True
 
@@ -714,7 +686,6 @@ def process_input_fields(driver, form, autofill_data):
             name = get_field_name(field, form)
             value = field.get_attribute("value")
 
-            # Handle checkboxes
             if tag == "input" and type_ == "checkbox":
                 if not field.is_selected():
                     try:
@@ -724,7 +695,6 @@ def process_input_fields(driver, form, autofill_data):
                         pass
                 continue
 
-            # Handle text inputs
             if (
                 tag == "input"
                 and type_ in ("text", "email", "tel")
@@ -748,7 +718,9 @@ def process_input_fields(driver, form, autofill_data):
                     if name not in autofill_data[db_section]:
                         autofill_data[db_section][name] = value or ""
                         updated = True
-                        print(f"Added new text input field to database: '{name}' = '{value or ''}'")
+                        print(
+                            f"Added new text input field to database: '{name}' = '{value or ''}'"
+                        )
                 elif name:
                     print(f"Text input '{name}' already has correct value: {value}")
 
@@ -797,7 +769,6 @@ def process_radio_buttons(driver, form, autofill_data):
                 if radio.is_selected():
                     selected_value = radio.get_attribute("value")
 
-            # Update autofill data
             if "radioButtons" not in autofill_data:
                 autofill_data["radioButtons"] = []
 
@@ -812,29 +783,38 @@ def process_radio_buttons(driver, form, autofill_data):
             )
 
             if found:
-                # Try to select the stored radio button option
+
                 stored_selected_option = next(
                     (o for o in found["options"] if o["selected"]),
                     None,
                 )
 
-                if stored_selected_option and stored_selected_option["value"] != selected_value:
-                    # Find the radio button element to select
+                if (
+                    stored_selected_option
+                    and stored_selected_option["value"] != selected_value
+                ):
+
                     for radio in radios:
-                        if radio.get_attribute("value") == stored_selected_option["value"]:
+                        if (
+                            radio.get_attribute("value")
+                            == stored_selected_option["value"]
+                        ):
                             try:
                                 radio.click()
                                 smart_delay(0.2)
-                                print(f"Selected radio button: {stored_selected_option['value']} for {label}")
+                                print(
+                                    f"Selected radio button: {stored_selected_option['value']} for {label}"
+                                )
                                 break
                             except Exception as e:
                                 print(f"Failed to select radio button: {e}")
                 elif not stored_selected_option:
                     print(f"No valid selection found for radio button group '{label}'")
                 else:
-                    print(f"Radio button group '{label}' already has correct value: {selected_value}")
+                    print(
+                        f"Radio button group '{label}' already has correct value: {selected_value}"
+                    )
 
-                # Update stored data
                 same_options = found["options"] == options
                 same_default = found.get("defaultValue", None) == selected_value
                 if not (same_options and same_default):
@@ -873,10 +853,9 @@ def process_dropdowns(driver, form, autofill_data):
 
     for select in selects:
         try:
-            # Get label
+
             label = get_dropdown_label(select)
 
-            # Get options
             options = []
             for option in select.find_elements(By.TAG_NAME, "option"):
                 options.append(
@@ -892,7 +871,6 @@ def process_dropdowns(driver, form, autofill_data):
                 options[0]["value"] if options else "",
             )
 
-            # Check if we have stored data for this dropdown
             if "dropdowns" not in autofill_data:
                 autofill_data["dropdowns"] = []
 
@@ -906,30 +884,45 @@ def process_dropdowns(driver, form, autofill_data):
             )
 
             if found:
-                # Try to select the stored option if it's not "Select an option"
+
                 stored_selected_option = next(
-                    (o for o in found["options"] if o["selected"] and o["value"] != "Select an option"),
+                    (
+                        o
+                        for o in found["options"]
+                        if o["selected"] and o["value"] != "Select an option"
+                    ),
                     None,
                 )
 
-                if stored_selected_option and stored_selected_option["value"] != selected_value:
-                    # Find the option element to select
+                if (
+                    stored_selected_option
+                    and stored_selected_option["value"] != selected_value
+                ):
+
                     option_elements = select.find_elements(By.TAG_NAME, "option")
                     for option_elem in option_elements:
-                        if option_elem.get_attribute("value") == stored_selected_option["value"]:
+                        if (
+                            option_elem.get_attribute("value")
+                            == stored_selected_option["value"]
+                        ):
                             try:
                                 option_elem.click()
                                 smart_delay(0.2)
-                                print(f"Selected dropdown option: {stored_selected_option['value']} for {label}")
+                                print(
+                                    f"Selected dropdown option: {stored_selected_option['value']} for {label}"
+                                )
                                 break
                             except Exception as e:
                                 print(f"Failed to select dropdown option: {e}")
                 elif not stored_selected_option:
-                    print(f"No valid selection found for dropdown '{label}' - still at 'Select an option'")
+                    print(
+                        f"No valid selection found for dropdown '{label}' - still at 'Select an option'"
+                    )
                 else:
-                    print(f"Dropdown '{label}' already has correct value: {selected_value}")
+                    print(
+                        f"Dropdown '{label}' already has correct value: {selected_value}"
+                    )
 
-                # Update stored data
                 same_options = found["options"] == options
                 same_default = found.get("defaultValue", None) == selected_value
                 if not (same_options and same_default):
@@ -940,7 +933,7 @@ def process_dropdowns(driver, form, autofill_data):
                 else:
                     found["count"] += 1
             else:
-                # No stored data, add new entry
+
                 autofill_data["dropdowns"].append(
                     {
                         "placeholderIncludes": label,
@@ -1045,7 +1038,6 @@ def find_next_action_button(driver, modal):
     """
     print("Looking for next action button...")
 
-    # First scroll to bottom of modal to ensure all buttons are visible
     try:
         driver.execute_script(
             "arguments[0].scrollTop = arguments[0].scrollHeight;", modal
@@ -1055,7 +1047,6 @@ def find_next_action_button(driver, modal):
     except:
         pass
 
-    # Check for continue applying button
     continue_btn = None
     try:
         continue_btn = modal.find_element(
@@ -1067,38 +1058,35 @@ def find_next_action_button(driver, modal):
     except:
         pass
 
-    # Check for submit button with multiple selectors
     submit_selectors = [
         'button[aria-label="Submit application"]',
         "button[data-live-test-easy-apply-submit-button]",
         'button[class*="artdeco-button--primary"]',
-        'button.artdeco-button--primary',
+        "button.artdeco-button--primary",
         'button[type="button"][class*="artdeco-button--primary"]',
-        'button.artdeco-button.artdeco-button--2.artdeco-button--primary',  # Specific structure from issue
+        "button.artdeco-button.artdeco-button--2.artdeco-button--primary",
         'button[class*="artdeco-button"][class*="artdeco-button--primary"][type="button"]',
     ]
 
-    # XPath selectors for text-based searches
     submit_xpath_selectors = [
         '//button[contains(text(), "Submit application")]',
         '//button[contains(text(), "Submit")]',
         '//button[contains(@aria-label, "Submit application")]',
-        '//button[@data-live-test-easy-apply-submit-button]',
+        "//button[@data-live-test-easy-apply-submit-button]",
         '//button[contains(@class, "artdeco-button--primary") and contains(text(), "Submit")]',
         '//button[contains(@class, "artdeco-button--primary") and contains(@aria-label, "Submit")]',
     ]
 
     submit_btn = None
 
-    # First try CSS selectors
     for selector in submit_selectors:
         try:
             submit_btn = modal.find_element(By.CSS_SELECTOR, selector)
             if submit_btn and submit_btn.is_displayed():
-                # Verify this is actually a submit button
+
                 aria_label = submit_btn.get_attribute("aria-label") or ""
                 button_text = submit_btn.text.strip()
-                if ("submit" in aria_label.lower() or "submit" in button_text.lower()):
+                if "submit" in aria_label.lower() or "submit" in button_text.lower():
                     print(f"Found submit button with CSS selector: {selector}")
                     break
                 else:
@@ -1106,7 +1094,6 @@ def find_next_action_button(driver, modal):
         except:
             continue
 
-    # If CSS selectors didn't work, try XPath selectors
     if not submit_btn:
         for xpath_selector in submit_xpath_selectors:
             try:
@@ -1114,7 +1101,9 @@ def find_next_action_button(driver, modal):
                 for elem in elements:
                     if elem.is_displayed():
                         submit_btn = elem
-                        print(f"Found submit button with XPath selector: {xpath_selector}")
+                        print(
+                            f"Found submit button with XPath selector: {xpath_selector}"
+                        )
                         break
                 if submit_btn:
                     break
@@ -1122,13 +1111,16 @@ def find_next_action_button(driver, modal):
                 continue
 
     if submit_btn:
-        # Debug submit button details
+
         try:
-            aria_label = submit_btn.get_attribute('aria-label') or "No aria-label"
+            aria_label = submit_btn.get_attribute("aria-label") or "No aria-label"
             button_text = submit_btn.text.strip() or "No text"
-            button_class = submit_btn.get_attribute('class') or "No class"
-            button_id = submit_btn.get_attribute('id') or "No id"
-            data_attr = submit_btn.get_attribute('data-live-test-easy-apply-submit-button') or "No data-attr"
+            button_class = submit_btn.get_attribute("class") or "No class"
+            button_id = submit_btn.get_attribute("id") or "No id"
+            data_attr = (
+                submit_btn.get_attribute("data-live-test-easy-apply-submit-button")
+                or "No data-attr"
+            )
             is_enabled = submit_btn.is_enabled()
             is_displayed = submit_btn.is_displayed()
 
@@ -1143,19 +1135,19 @@ def find_next_action_button(driver, modal):
         except Exception as e:
             print(f"Error getting submit button details: {e}")
 
-        # Scroll to submit button to ensure it's visible
         try:
             print("Scrolling to submit button...")
             driver.execute_script(
                 "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
                 submit_btn,
             )
-            smart_delay(1.0)  # Give more time for smooth scrolling
+            smart_delay(1.0)
             print("✅ Scrolled to Submit button")
 
-            # Verify button is still visible after scroll
             if not submit_btn.is_displayed():
-                print("⚠️ Submit button not visible after scroll, trying alternative scroll")
+                print(
+                    "⚠️ Submit button not visible after scroll, trying alternative scroll"
+                )
                 driver.execute_script("arguments[0].scrollIntoView(true);", submit_btn)
                 smart_delay(0.5)
         except Exception as e:
@@ -1163,7 +1155,6 @@ def find_next_action_button(driver, modal):
 
         return {"type": "submit", "element": submit_btn}
 
-    # Check for review button
     review_css_selectors = [
         'button[aria-label="Review your application"]',
         'button[aria-label*="Review"]',
@@ -1174,13 +1165,12 @@ def find_next_action_button(driver, modal):
     review_xpath_selectors = [
         '//button[contains(text(), "Review")]',
         '//button[contains(@aria-label, "Review")]',
-        '//button[@data-easy-apply-review-button]',
-        '//button[@data-live-test-easy-apply-review-button]',
+        "//button[@data-easy-apply-review-button]",
+        "//button[@data-live-test-easy-apply-review-button]",
     ]
 
     review_btn = None
 
-    # First try CSS selectors
     for selector in review_css_selectors:
         try:
             review_btn = modal.find_element(By.CSS_SELECTOR, selector)
@@ -1190,7 +1180,6 @@ def find_next_action_button(driver, modal):
         except:
             continue
 
-    # If CSS selectors didn't work, try XPath selectors
     if not review_btn:
         for xpath_selector in review_xpath_selectors:
             try:
@@ -1198,7 +1187,9 @@ def find_next_action_button(driver, modal):
                 for elem in elements:
                     if elem.is_displayed():
                         review_btn = elem
-                        print(f"Found review button with XPath selector: {xpath_selector}")
+                        print(
+                            f"Found review button with XPath selector: {xpath_selector}"
+                        )
                         break
                 if review_btn:
                     break
@@ -1209,7 +1200,7 @@ def find_next_action_button(driver, modal):
         print(
             f"Found Review button: {review_btn.get_attribute('aria-label') or review_btn.text}"
         )
-        # Scroll to review button
+
         try:
             driver.execute_script(
                 "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
@@ -1221,14 +1212,13 @@ def find_next_action_button(driver, modal):
             pass
         return {"type": "next", "element": review_btn}
 
-    # Check for next button (generic) - improved with more selectors
     next_css_selectors = [
-        'button[aria-label="Continue to next step"]',  # From user's example
-        "button[data-easy-apply-next-button]",  # From user's example
-        "button[data-live-test-easy-apply-next-button]",  # From user's example
+        'button[aria-label="Continue to next step"]',
+        "button[data-easy-apply-next-button]",
+        "button[data-live-test-easy-apply-next-button]",
         'button[aria-label*="Next"]',
         'button[aria-label*="Continue"]',
-        'button.artdeco-button--primary',
+        "button.artdeco-button--primary",
     ]
 
     next_xpath_selectors = [
@@ -1244,7 +1234,6 @@ def find_next_action_button(driver, modal):
 
     next_btn = None
 
-    # First try CSS selectors
     for selector in next_css_selectors:
         try:
             next_btn = modal.find_element(By.CSS_SELECTOR, selector)
@@ -1254,7 +1243,6 @@ def find_next_action_button(driver, modal):
         except:
             continue
 
-    # If CSS selectors didn't work, try XPath selectors
     if not next_btn:
         for xpath_selector in next_xpath_selectors:
             try:
@@ -1262,7 +1250,9 @@ def find_next_action_button(driver, modal):
                 for elem in elements:
                     if elem.is_displayed():
                         next_btn = elem
-                        print(f"Found next button with XPath selector: {xpath_selector}")
+                        print(
+                            f"Found next button with XPath selector: {xpath_selector}"
+                        )
                         break
                 if next_btn:
                     break
@@ -1273,7 +1263,7 @@ def find_next_action_button(driver, modal):
         print(
             f"Found Next button: {next_btn.get_attribute('aria-label') or next_btn.text}"
         )
-        # Scroll to next button
+
         try:
             driver.execute_script(
                 "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
@@ -1285,7 +1275,6 @@ def find_next_action_button(driver, modal):
             pass
         return {"type": "next", "element": next_btn}
 
-    # Debug: show all buttons in modal if none found
     try:
         all_buttons = modal.find_elements(By.TAG_NAME, "button")
         print(
@@ -1316,7 +1305,6 @@ def uncheck_follow_company_checkbox(driver):
     try:
         print("🔍 Looking for follow company checkbox...")
 
-        # First, try to find the footer section containing the checkbox
         footer_section = None
         try:
             footer_section = driver.find_element(
@@ -1326,7 +1314,6 @@ def uncheck_follow_company_checkbox(driver):
         except:
             print("⚠️ Follow company footer section not found, searching in full page")
 
-        # Try multiple selectors for the checkbox
         checkbox_selectors = [
             "#follow-company-checkbox",
             "input[id='follow-company-checkbox']",
@@ -1353,7 +1340,6 @@ def uncheck_follow_company_checkbox(driver):
             print("Follow company checkbox not found - skipping")
             return
 
-        # Get checkbox info for debugging
         try:
             checkbox_classes = follow_checkbox.get_attribute("class") or "No class"
             checkbox_id = follow_checkbox.get_attribute("id") or "No id"
@@ -1366,14 +1352,12 @@ def uncheck_follow_company_checkbox(driver):
         except:
             is_hidden = False
 
-        # Check if checkbox is checked
         is_checked = follow_checkbox.is_selected()
         print(f"Follow company checkbox is {'checked' if is_checked else 'unchecked'}")
 
         if is_checked:
             print("Unchecking follow company checkbox...")
 
-            # Scroll to the footer section or checkbox first
             scroll_target = footer_section if footer_section else follow_checkbox
             driver.execute_script(
                 "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
@@ -1382,11 +1366,10 @@ def uncheck_follow_company_checkbox(driver):
             smart_delay(0.8)
             print("Scrolled to follow company section")
 
-            # If checkbox is visually hidden, click the label instead
             if is_hidden or not follow_checkbox.is_displayed():
                 print("Checkbox is visually hidden, looking for label to click...")
                 try:
-                    # Find the label element
+
                     label_selectors = [
                         f"label[for='{follow_checkbox.get_attribute('id')}']",
                         "label[for='follow-company-checkbox']",
@@ -1419,12 +1402,11 @@ def uncheck_follow_company_checkbox(driver):
                     driver.execute_script("arguments[0].click();", follow_checkbox)
                     smart_delay(0.5)
             else:
-                # Checkbox is visible, click it directly
+
                 print("Clicking visible checkbox...")
                 follow_checkbox.click()
                 smart_delay(0.5)
 
-            # Verify it was unchecked
             smart_delay(0.3)
             try:
                 is_still_checked = follow_checkbox.is_selected()
@@ -1432,7 +1414,7 @@ def uncheck_follow_company_checkbox(driver):
                     print("✅ Successfully unchecked follow company checkbox")
                 else:
                     print("⚠️ Checkbox might still be checked, trying one more time...")
-                    # Try one more time with different method
+
                     if is_hidden:
                         driver.execute_script(
                             "arguments[0].checked = false;", follow_checkbox
@@ -1461,7 +1443,6 @@ def check_if_final_step(driver, modal):
     try:
         print("🔍 Checking if we're on the final step...")
 
-        # Look for progress bar with 100% completion
         progress_selectors = [
             'progress[value="100"]',
             'progress[aria-valuenow="100"]',
@@ -1469,7 +1450,6 @@ def check_if_final_step(driver, modal):
             'progress[max="100"][value="100"]',
         ]
 
-        # Search in modal first, then in full page
         search_contexts = [modal, driver]
 
         for context in search_contexts:
@@ -1481,16 +1461,16 @@ def check_if_final_step(driver, modal):
                         aria_valuenow = progress_element.get_attribute("aria-valuenow")
                         max_value = progress_element.get_attribute("max")
 
-                        print(f"Found progress element: value='{value}', aria-valuenow='{aria_valuenow}', max='{max_value}'")
+                        print(
+                            f"Found progress element: value='{value}', aria-valuenow='{aria_valuenow}', max='{max_value}'"
+                        )
 
-                        # Check if progress is at 100%
-                        if (value == "100" or aria_valuenow == "100"):
+                        if value == "100" or aria_valuenow == "100":
                             print("✅ Progress is at 100% - we're on the final step!")
                             return True
                 except:
                     continue
 
-        # Also look for percentage text indicators
         percentage_selectors = [
             'span[aria-label*="100 percent"]',
             'span:contains("100%")',
@@ -1501,7 +1481,7 @@ def check_if_final_step(driver, modal):
             for selector in percentage_selectors:
                 try:
                     if ":contains(" in selector:
-                        # Use XPath for text-based search
+
                         xpath_selector = '//span[contains(text(), "100%")]'
                         elements = context.find_elements(By.XPATH, xpath_selector)
                         for elem in elements:
@@ -1511,7 +1491,9 @@ def check_if_final_step(driver, modal):
                     else:
                         elem = context.find_element(By.CSS_SELECTOR, selector)
                         if elem and elem.is_displayed():
-                            print(f"Found 100% aria-label indicator: {elem.get_attribute('aria-label')}")
+                            print(
+                                f"Found 100% aria-label indicator: {elem.get_attribute('aria-label')}"
+                            )
                             return True
                 except:
                     continue
