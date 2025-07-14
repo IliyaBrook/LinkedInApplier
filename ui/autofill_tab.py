@@ -1,6 +1,6 @@
+import json
 import tkinter as tk
 from tkinter import ttk, messagebox
-import json
 
 
 class AutofillTab:
@@ -19,34 +19,27 @@ class AutofillTab:
         self.create_widgets()
         self.load_autofill()
 
+    # noinspection PyMethodMayBeStatic
     def setup_styles(self):
         """Setup custom styles for better UI"""
         style = ttk.Style()
 
-        # Configure section button style
         style.configure(
             "Section.TButton", font=("Segoe UI", 10, "bold"), padding=(10, 8)
         )
 
-        # Configure section frame style
         style.configure("Section.TFrame", relief="solid", borderwidth=1)
 
-        # Configure content frame style
         style.configure("Content.TFrame", padding=10)
 
-        # Configure delete button style
         style.configure("Delete.TButton", font=("Segoe UI", 8), foreground="red")
 
-        # Configure save button style
         style.configure("Save.TButton", font=("Segoe UI", 10, "bold"), padding=(20, 10))
 
     def create_widgets(self):
-        """Create the main widget structure"""
-        # Main container with padding
         main_container = ttk.Frame(self.frame)
         main_container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Header
         header_frame = ttk.Frame(main_container)
         header_frame.pack(fill="x", pady=(0, 15))
 
@@ -63,11 +56,9 @@ class AutofillTab:
         )
         subtitle_label.pack(anchor="w", pady=(2, 0))
 
-        # Sections container
         sections_container = ttk.Frame(main_container)
         sections_container.pack(fill="both", expand=True)
 
-        # Create sections
         section_configs = [
             ("textInput", "📝 Text Input Fields", "Manage text input autofill values"),
             (
@@ -81,11 +72,9 @@ class AutofillTab:
         for i, (section_id, title, description) in enumerate(section_configs):
             self.create_section(sections_container, section_id, title, description)
             if i < len(section_configs) - 1:
-                # Add separator between sections
                 separator = ttk.Separator(sections_container, orient="horizontal")
                 separator.pack(fill="x", pady=10)
 
-        # Save button container
         save_container = ttk.Frame(main_container)
         save_container.pack(fill="x", pady=(20, 0))
 
@@ -98,16 +87,12 @@ class AutofillTab:
         save_button.pack(side="right")
 
     def create_section(self, parent, section_id, title, description):
-        """Create a collapsible section"""
-        # Section container
         section_frame = ttk.Frame(parent, style="Section.TFrame")
         section_frame.pack(fill="x", pady=5)
 
-        # Section header
         header_frame = ttk.Frame(section_frame)
         header_frame.pack(fill="x", padx=5, pady=5)
 
-        # Toggle button with arrow indicator
         btn_text = (
             f"▼ {title}"
             if section_id in self.autofill_section_states
@@ -122,17 +107,13 @@ class AutofillTab:
         )
         toggle_btn.pack(side="left")
 
-        # Description
         desc_label = ttk.Label(
             header_frame, text=description, font=("Segoe UI", 9), foreground="gray"
         )
         desc_label.pack(side="left", padx=(15, 0))
 
-        # Content container with scrollable area
         content_container = ttk.Frame(section_frame)
-        # Don't pack initially - will be packed when section is opened
 
-        # Create scrollable content area
         canvas = tk.Canvas(
             content_container,
             height=300 if section_id == "textInput" else 200,
@@ -142,46 +123,42 @@ class AutofillTab:
         vsb = ttk.Scrollbar(content_container, orient="vertical", command=canvas.yview)
         content_frame = ttk.Frame(canvas, style="Content.TFrame")
 
-        # Pack canvas and scrollbar within content_container
         canvas.pack(side="left", fill="both", expand=True)
         vsb.pack(side="right", fill="y")
 
-        # Configure scrolling
         canvas_window = canvas.create_window((0, 0), window=content_frame, anchor="nw")
         canvas.configure(yscrollcommand=vsb.set)
 
+        # noinspection PyUnusedLocal
         def _on_frame_configure(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
-            # Make content frame fill canvas width
             canvas_width = canvas.winfo_width()
-            if canvas_width > 1:  # Avoid initial invalid width
+            if canvas_width > 1:
                 canvas.itemconfig(canvas_window, width=canvas_width)
 
         def _on_canvas_configure(event):
-            # Update content frame width when canvas is resized
             canvas_width = event.width
             canvas.itemconfig(canvas_window, width=canvas_width)
 
         content_frame.bind("<Configure>", _on_frame_configure)
         canvas.bind("<Configure>", _on_canvas_configure)
 
-        # Mouse wheel scrolling
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
+        # noinspection PyUnusedLocal
         def _bind_mousewheel(event):
             canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
+        # noinspection PyUnusedLocal
         def _unbind_mousewheel(event):
             canvas.unbind_all("<MouseWheel>")
 
         canvas.bind("<Enter>", _bind_mousewheel)
         canvas.bind("<Leave>", _unbind_mousewheel)
 
-        # Initially hide content - hide the entire container
         content_container.pack_forget()
 
-        # Store references
         self.autofill_sections[section_id] = content_frame
         self.autofill_section_frames[section_id] = section_frame
         self.autofill_section_states[section_id] = False
@@ -200,7 +177,6 @@ class AutofillTab:
             new_text = current_text.replace("▼", "▶")
             button.configure(text=new_text)
         else:
-            # Close all other sections
             for other_id in self.autofill_section_states:
                 if other_id == section_id or not isinstance(
                     self.autofill_section_states[other_id], bool
@@ -221,24 +197,19 @@ class AutofillTab:
         self.autofill_section_states[section_id] = not state
 
     def create_text_input_item(self, parent, key, value):
-        """Create a text input item with improved layout"""
         item_frame = ttk.Frame(parent)
         item_frame.pack(fill="x", pady=5)
 
-        # Label
         label = ttk.Label(item_frame, text=key, font=("Segoe UI", 9, "bold"))
         label.pack(anchor="w")
 
-        # Input row
         input_frame = ttk.Frame(item_frame)
         input_frame.pack(fill="x", pady=(5, 0))
 
-        # Entry field
         var = tk.StringVar(value=value)
         entry = ttk.Entry(input_frame, textvariable=var, width=40)
         entry.pack(side="left", fill="x", expand=True)
 
-        # Delete button
         del_btn = ttk.Button(
             input_frame,
             text="🗑 Delete",
@@ -254,7 +225,6 @@ class AutofillTab:
         item_frame = ttk.Frame(parent)
         item_frame.pack(fill="x", pady=10)
 
-        # Header
         label_text = rb_data.get("placeholderIncludes", "")
         count = rb_data.get("count", None)
         if count is not None:
@@ -274,7 +244,6 @@ class AutofillTab:
         )
         del_btn.pack(side="right")
 
-        # Options container
         options_frame = ttk.Frame(item_frame)
         options_frame.pack(fill="x", pady=(10, 0), padx=20)
 
@@ -288,11 +257,9 @@ class AutofillTab:
             radio_btn.pack(anchor="w", pady=2)
 
     def create_dropdown_item(self, parent, dd_data):
-        """Create a dropdown item with improved layout"""
         item_frame = ttk.Frame(parent)
         item_frame.pack(fill="x", pady=10)
 
-        # Header
         label_text = dd_data.get("placeholderIncludes", "")
         count = dd_data.get("count", None)
         if count is not None:
@@ -301,7 +268,6 @@ class AutofillTab:
         label = ttk.Label(item_frame, text=label_text, font=("Segoe UI", 9, "bold"))
         label.pack(anchor="w")
 
-        # Dropdown row
         dropdown_frame = ttk.Frame(item_frame)
         dropdown_frame.pack(fill="x", pady=(5, 0))
 
@@ -330,12 +296,10 @@ class AutofillTab:
 
     def load_autofill(self):
         """Load autofill data with improved UI creation"""
-        # Clear existing widgets
         for section in ["textInput", "radioButtons", "dropdowns"]:
             for widget in self.autofill_sections[section].winfo_children():
                 widget.destroy()
 
-        # Clear field dictionaries
         self.input_fields.clear()
         self.radio_fields.clear()
         self.dropdown_fields.clear()
@@ -345,29 +309,24 @@ class AutofillTab:
             with open(self.autofill_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            # Load text inputs
             for key, value in data.get("textInput", {}).items():
                 self.create_text_input_item(
                     self.autofill_sections["textInput"], key, value
                 )
 
-            # Load radio buttons
             for rb_data in data.get("radioButtons", []):
                 self.create_radio_button_item(
                     self.autofill_sections["radioButtons"], rb_data
                 )
 
-            # Load dropdowns
             for dd_data in data.get("dropdowns", []):
                 self.create_dropdown_item(self.autofill_sections["dropdowns"], dd_data)
 
         except Exception as e:
             print(f"Error loading autofill data: {e}")
-            # Show empty state message
             self.show_empty_state()
 
     def show_empty_state(self):
-        """Show empty state message when no data is available"""
         for section_id in ["textInput", "radioButtons", "dropdowns"]:
             empty_frame = ttk.Frame(self.autofill_sections[section_id])
             empty_frame.pack(fill="both", expand=True, pady=20)
@@ -381,7 +340,6 @@ class AutofillTab:
             empty_label.pack(anchor="center")
 
     def save_autofill(self):
-        """Save autofill data with user feedback"""
         try:
             data = {
                 "textInput": {k: v.get() for k, v in self.input_fields.items()},
@@ -389,7 +347,6 @@ class AutofillTab:
                 "dropdowns": [],
             }
 
-            # Save radioButtons
             for label, var in self.radio_fields.items():
                 rb = None
                 try:
@@ -399,13 +356,17 @@ class AutofillTab:
                         if item.get("placeholderIncludes", "") == label:
                             rb = item
                             break
-                except Exception:
+                except (
+                    FileNotFoundError,
+                    json.JSONDecodeError,
+                    OSError,
+                    PermissionError,
+                ):
                     pass
                 if rb:
                     rb["defaultValue"] = var.get()
                     data["radioButtons"].append(rb)
 
-            # Save dropdowns
             for label, var in self.dropdown_fields.items():
                 dd = None
                 try:
@@ -415,7 +376,12 @@ class AutofillTab:
                         if item.get("placeholderIncludes", "") == label:
                             dd = item
                             break
-                except Exception:
+                except (
+                    FileNotFoundError,
+                    json.JSONDecodeError,
+                    OSError,
+                    PermissionError,
+                ):
                     pass
                 if dd:
                     dd["defaultValue"] = (
@@ -441,7 +407,6 @@ class AutofillTab:
             )
 
     def delete_radio(self, label):
-        """Delete radio button group"""
         if messagebox.askyesno(
             "Confirm Delete",
             f"Are you sure you want to delete the radio button group '{label}'?",
@@ -463,7 +428,6 @@ class AutofillTab:
                 messagebox.showerror("Error", f"Failed to delete item: {str(e)}")
 
     def delete_dropdown(self, label):
-        """Delete dropdown item"""
         if messagebox.askyesno(
             "Confirm Delete", f"Are you sure you want to delete the dropdown '{label}'?"
         ):
@@ -484,7 +448,6 @@ class AutofillTab:
                 messagebox.showerror("Error", f"Failed to delete item: {str(e)}")
 
     def delete_textinput(self, label):
-        """Delete text input item"""
         if messagebox.askyesno(
             "Confirm Delete",
             f"Are you sure you want to delete the text input '{label}'?",

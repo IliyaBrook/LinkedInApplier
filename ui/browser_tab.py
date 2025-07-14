@@ -5,6 +5,7 @@ import json
 
 class BrowserTab:
     def __init__(self, parent, browser_file):
+        self.executable_entry = None
         self.frame = ttk.Frame(parent)
         self.browser_file = browser_file
         self.executable_path_var = tk.StringVar()
@@ -34,8 +35,10 @@ class BrowserTab:
                 data = json.load(f)
             self.executable_path_var.set(data.get("executable_path", ""))
             self.profile_path_var.set(data.get("profile_path", ""))
-        except Exception:
-            pass
+        except (FileNotFoundError, json.JSONDecodeError, OSError, PermissionError):
+            self.executable_path_var.set("")
+            self.profile_path_var.set("")
+
 
     def save_browser(self):
         data = {

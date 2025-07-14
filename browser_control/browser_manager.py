@@ -356,6 +356,3 @@ class BrowserManager:
         if self.driver:
             self.driver.quit()
             self.driver = None
-
-    def is_running(self):
-        return self.driver is not None
