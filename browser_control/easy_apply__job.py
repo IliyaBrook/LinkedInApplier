@@ -520,7 +520,7 @@ def apply_to_job(driver, autofill_data):
                             )
                             close_all_modals(driver)
                             return True
-                    except:
+                    except WebDriverException:
                         pass
 
                     close_all_modals(driver)
@@ -541,7 +541,7 @@ def apply_to_job(driver, autofill_data):
                     button_aria = (
                         next_button.get_attribute("aria-label") or "No aria-label"
                     )
-                    button_class = next_button.get_attribute("class") or "No class"
+                    next_button.get_attribute("class") or "No class"
                     button_data_attrs = []
                     for attr in [
                         "data-easy-apply-next-button",
@@ -553,7 +553,11 @@ def apply_to_job(driver, autofill_data):
                     print(
                         f"Button details: text='{button_text}', aria-label='{button_aria}', data-attrs={button_data_attrs}"
                     )
-                except:
+                except (
+                    StaleElementReferenceException,
+                    WebDriverException,
+                    AttributeError,
+                ):
                     pass
 
                 try:
@@ -600,7 +604,7 @@ def apply_to_job(driver, autofill_data):
                             print(
                                 "⚠️ Modal disappeared after clicking Next - this might be normal"
                             )
-                    except:
+                    except WebDriverException:
                         pass
 
                 except Exception as e:
@@ -628,9 +632,17 @@ def apply_to_job(driver, autofill_data):
                                     print(
                                         f"  Button {i+1}: text='{btn_text}', aria='{btn_aria}', displayed={btn_displayed}"
                                     )
-                                except:
+                                except (
+                                    StaleElementReferenceException,
+                                    WebDriverException,
+                                    AttributeError,
+                                ):
                                     pass
-                    except:
+                    except (
+                        StaleElementReferenceException,
+                        WebDriverException,
+                        AttributeError,
+                    ):
                         pass
 
                     terminate_job_modal(driver)
@@ -667,7 +679,7 @@ def apply_to_job(driver, autofill_data):
         print(f"Error in apply_to_job: {e}")
         try:
             close_all_modals(driver)
-        except:
+        except WebDriverException:
             pass
         return False
 
@@ -678,7 +690,7 @@ def process_form_fields(driver, form, autofill_data):
     """
     updated = False
 
-    if process_input_fields(driver, form, autofill_data):
+    if process_input_fields(form, autofill_data):
         updated = True
 
     if process_radio_buttons(driver, form, autofill_data):
@@ -690,7 +702,7 @@ def process_form_fields(driver, form, autofill_data):
     return updated
 
 
-def process_input_fields(driver, form, autofill_data):
+def process_input_fields(form, autofill_data):
     """
     Process input and textarea fields in the form.
     """
