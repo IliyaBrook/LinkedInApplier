@@ -22,6 +22,15 @@ class MainUI:
         self.bot_should_run = False
         self.browser_open = False
         self.browser = BrowserManager(BROWSER_FILE)
+
+        # Initialize UI attributes
+        self.notebook = None
+        self.filters_tab = None
+        self.autofill_tab = None
+        self.browser_tab = None
+        self.open_browser_btn = None
+        self.start_btn = None
+
         self.create_widgets()
 
     def create_widgets(self):
@@ -48,10 +57,25 @@ class MainUI:
             btn_frame,
             text="Start",
             command=self.toggle_bot,
-            # disable for now
-            # state="disabled"
         )
         self.start_btn.pack(side="left", padx=5)
+
+        self.root.bind("<Configure>", self.on_window_configure)
+        self.root.after(200, self.initialize_ui_layout)
+
+    def on_window_configure(self, event):
+        if (
+            event.widget == self.root
+            and self.filters_tab is not None
+            and hasattr(self.filters_tab, "arrange_sections")
+        ):
+            self.root.after_idle(self.filters_tab.arrange_sections)
+
+    def initialize_ui_layout(self):
+        if self.filters_tab is not None and hasattr(
+            self.filters_tab, "initialize_layout"
+        ):
+            self.filters_tab.initialize_layout()
 
     def start_browser_on_launch(self):
         thread = threading.Thread(target=self._start_browser_on_launch)
@@ -89,8 +113,10 @@ class MainUI:
 
     def on_browser_opened(self):
         self.browser_open = True
-        self.open_browser_btn.config(text="Close Browser")
-        self.start_btn.config(state="normal")
+        if self.open_browser_btn is not None:
+            self.open_browser_btn.config(text="Close Browser")
+        if self.start_btn is not None:
+            self.start_btn.config(state="normal")
 
     def close_browser_thread(self):
         thread = threading.Thread(target=self._close_browser)
@@ -109,25 +135,26 @@ class MainUI:
 
     def on_browser_closed(self):
         self.browser_open = False
-        self.open_browser_btn.config(text="Open Browser")
-        self.start_btn.config(
-            # disable for now
-            # state="disabled"
-            state="normal"
-        )
+        if self.open_browser_btn is not None:
+            self.open_browser_btn.config(text="Open Browser")
+        if self.start_btn is not None:
+            self.start_btn.config(state="normal")
         self.is_running = False
-        self.start_btn.config(text="Start")
+        if self.start_btn is not None:
+            self.start_btn.config(text="Start")
 
     def toggle_bot(self):
         if not self.is_running:
             self.is_running = True
             self.bot_should_run = True
-            self.start_btn.config(text="Stop")
+            if self.start_btn is not None:
+                self.start_btn.config(text="Stop")
             self.start_bot_thread()
         else:
             self.bot_should_run = False
             self.is_running = False
-            self.start_btn.config(text="Start")
+            if self.start_btn is not None:
+                self.start_btn.config(text="Start")
 
     def start_bot_thread(self):
         thread = threading.Thread(target=self._run_bot)
@@ -142,7 +169,12 @@ class MainUI:
                 )
                 self.is_running = False
                 self.bot_should_run = False
-                self.root.after(0, lambda: self.start_btn.config(text="Start"))
+
+                def reset_button():
+                    if self.start_btn is not None:
+                        self.start_btn.config(text="Start")
+
+                self.root.after(0, reset_button)
                 return
             current_url = self.browser.driver.current_url
             if "linkedin.com/jobs" in current_url:
@@ -157,9 +189,12 @@ class MainUI:
                 job_title = autofill.get("textInput", {}).get("jobTitle", "")
                 time_code = filters.get("timeFilter", "any")
                 easy_apply_only = filters.get("easyApplyOnly", False)
-                job_apply_url = self.filters_tab.build_linkedin_job_url(
-                    job_title, time_code, easy_apply_only
-                )
+                if self.filters_tab is not None:
+                    job_apply_url = self.filters_tab.build_linkedin_job_url(
+                        job_title, time_code, easy_apply_only
+                    )
+                else:
+                    job_apply_url = "https://www.linkedin.com/jobs/search/"
                 self.browser.go_to_url(job_apply_url)
                 self.browser.process_job_listings(
                     AUTOFILL_FILE, FILTERS_FILE, lambda: self.bot_should_run
@@ -174,7 +209,8 @@ class MainUI:
     def on_bot_stopped(self):
         self.is_running = False
         self.bot_should_run = False
-        self.start_btn.config(text="Start")
+        if self.start_btn is not None:
+            self.start_btn.config(text="Start")
 
 
 def run():

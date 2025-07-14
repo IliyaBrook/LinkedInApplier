@@ -5,6 +5,9 @@ import json
 
 class FiltersTab:
     def __init__(self, parent, filters_file):
+        self.timeFilter_combo = None
+        self.easy_apply_checkbox = None
+        self.easy_apply_var = None
         self.frame = ttk.Frame(parent)
         self.filters_file = filters_file
         self.timeFilter_var = tk.StringVar()
