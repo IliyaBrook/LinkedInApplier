@@ -11,10 +11,14 @@
     "How many years of work experience do you have with Next.js?": "3",
     "First name": "Iliya",
     "Last name": "Brook",
-    "City": "",
+    "City": "Tel Aviv",
     "How many years of work experience do you have with C#?": "0",
-    "How many years of work experience do you have with Real-Time Operating Systems (RTOS)?": "",
-    "How many years of work experience do you have with Embedded Systems?": ""
+    "How many years of work experience do you have with Real-Time Operating Systems (RTOS)?": "0",
+    "How many years of work experience do you have with Embedded Systems?": "2",
+    "How many years of experience do you have?": "4",
+    "What is your salary expectations?": "20.000",
+    "How many years of work experience do you have with DevOps?": "3",
+    "How many years of work experience do you have with React.js?": "4"
   },
   "radioButtons": [
     {
@@ -42,6 +46,42 @@
           "value": "choice-1632766494627",
           "text": "Other",
           "selected": false
+        }
+      ]
+    },
+    {
+      "placeholderIncludes": "Are you comfortable working in an onsite setting?",
+      "defaultValue": "Yes",
+      "count": 1,
+      "createdAt": 1752445453090,
+      "options": [
+        {
+          "value": "Yes",
+          "text": "Yes",
+          "selected": true
+        },
+        {
+          "value": "No",
+          "text": "No",
+          "selected": false
+        }
+      ]
+    },
+    {
+      "placeholderIncludes": "Have you completed the following level of education: Bachelor's Degree?",
+      "defaultValue": "No",
+      "count": 1,
+      "createdAt": 1752446865235,
+      "options": [
+        {
+          "value": "Yes",
+          "text": "Yes",
+          "selected": false
+        },
+        {
+          "value": "No",
+          "text": "No",
+          "selected": true
         }
       ]
     }
@@ -83,7 +123,7 @@
     },
     {
       "placeholderIncludes": "Phone country code",
-      "count": 7,
+      "count": 11,
       "options": [
         {
           "value": "Select an option",
@@ -1330,7 +1370,7 @@
     },
     {
       "placeholderIncludes": "Email address",
-      "count": 5,
+      "count": 9,
       "options": [
         {
           "value": "Select an option",

@@ -47,13 +47,15 @@ class BrowserManager:
             )
             chrome_options.add_experimental_option("useAutomationExtension", False)
             chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-            self.driver = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()), options=chrome_options
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            self.driver.execute_script(
+                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             )
             return True
         except Exception as e:
-            self.driver = None
-            raise e
+            print(f"Failed to start browser: {e}")
+            return False
 
     def go_to_url(self, url):
         if self.driver:
@@ -85,21 +87,36 @@ class BrowserManager:
             ]
             title_skip_words = [w.lower() for w in filters.get("titleSkipWords", [])]
             bad_words = [w.lower() for w in filters.get("badWords", [])]
+
+            print(f"Found {len(job_cards)} job cards on page")
+            print(
+                f"Filter settings: titleFilterWords={title_filter_words}, titleSkipWords={title_skip_words}, badWords={bad_words}"
+            )
+
             filtered_jobs = []
             for idx, job_card in enumerate(job_cards):
                 if not should_continue():
                     print("Bot stopped by user during filtering.")
                     return
                 try:
+                    print(f"\nProcessing job card {idx + 1}/{len(job_cards)}")
+
                     # Пропускать вакансии, если уже подано (есть текст 'Applied')
+                    already_applied = False
                     try:
                         applied_footer = job_card.find_element(
                             By.CSS_SELECTOR, ".job-card-container__footer-job-state"
                         )
-                        if "applied" in applied_footer.text.strip().lower():
+                        footer_text = applied_footer.text.strip().lower()
+                        if "applied" in footer_text:
+                            already_applied = True
+                            print(
+                                f"  Job {idx + 1}: Already applied (footer: '{footer_text}') - SKIPPING"
+                            )
                             continue
                     except Exception:
                         pass
+
                     try:
                         job_title_el = job_card.find_element(
                             By.CSS_SELECTOR,
@@ -111,58 +128,160 @@ class BrowserManager:
                                 By.CSS_SELECTOR, ".job-card-container__link"
                             )
                         except Exception:
+                            print(
+                                f"  Job {idx + 1}: No job title link found - SKIPPING"
+                            )
                             continue
+
                     job_title = job_title_el.text.strip().lower()
+                    print(f"  Job {idx + 1}: Title = '{job_title}'")
+
                     subtitle = ""
                     try:
                         subtitle = (
                             job_card.find_element(
-                                By.CSS_SELECTOR, '[class*="subtitle"]'
+                                By.CSS_SELECTOR,
+                                ".artdeco-entity-lockup__subtitle",
                             )
                             .text.strip()
                             .lower()
                         )
+                        print(f"  Job {idx + 1}: Subtitle = '{subtitle}'")
                     except Exception:
                         pass
-                    if any(
-                        re.search(r"\b" + re.escape(skip) + r"\b", job_title)
-                        or re.search(r"\b" + re.escape(skip) + r"\b", subtitle)
-                        for skip in title_skip_words
-                    ):
-                        continue
-                    if title_filter_words and not any(
-                        re.search(r"\b" + re.escape(f) + r"\b", job_title)
-                        for f in title_filter_words
-                    ):
-                        continue
+
+                    # Check title filter words
+                    if title_filter_words:
+                        matched = any(
+                            filter_word in job_title
+                            for filter_word in title_filter_words
+                        )
+                        if not matched:
+                            print(
+                                f"  Job {idx + 1}: Title doesn't match filter words - SKIPPING"
+                            )
+                            continue
+                        else:
+                            print(f"  Job {idx + 1}: Title matches filter words - OK")
+                    else:
+                        print(f"  Job {idx + 1}: No title filter words - OK")
+
+                    # Check title skip words
+                    if title_skip_words:
+                        skip = any(
+                            skip_word in job_title for skip_word in title_skip_words
+                        )
+                        if skip:
+                            print(
+                                f"  Job {idx + 1}: Title contains skip words - SKIPPING"
+                            )
+                            continue
+                        else:
+                            print(
+                                f"  Job {idx + 1}: Title doesn't contain skip words - OK"
+                            )
+                    else:
+                        print(f"  Job {idx + 1}: No title skip words - OK")
+
+                    # Easy Apply button check will be done on job details page, not in job card
+                    print(
+                        f"  Job {idx + 1}: PASSED ALL FILTERS - Adding to filtered jobs"
+                    )
                     filtered_jobs.append((job_card, job_title_el))
                 except Exception as e:
-                    print(f"Error filtering job {idx}: {e}")
-            for job_card, job_title_el in filtered_jobs:
+                    print(f"  Job {idx + 1}: Error filtering job: {e} - SKIPPING")
+
+            print(
+                f"\nFiltering complete: {len(filtered_jobs)} jobs passed filters out of {len(job_cards)} total jobs"
+            )
+
+            applied_count = 0
+            for idx, (job_card, job_title_el) in enumerate(filtered_jobs):
                 if not should_continue():
-                    print("Bot stopped by user during job processing.")
+                    print("Bot stopped by user during job application.")
                     return
                 try:
-                    self.driver.execute_script(
-                        "arguments[0].scrollIntoView({block: 'center'});", job_card
+                    print(f"\nApplying to filtered job {idx + 1}/{len(filtered_jobs)}")
+
+                    # Re-find job cards to avoid stale element reference
+                    current_job_cards = self.driver.find_elements(
+                        By.CSS_SELECTOR, ".scaffold-layout__list-item"
                     )
+
+                    if idx >= len(current_job_cards):
+                        print(
+                            f"  Job {idx + 1}: Job card no longer available - SKIPPING"
+                        )
+                        continue
+
+                    current_job_card = current_job_cards[idx]
+
+                    # Re-find job title element
+                    current_job_title_el = None
+                    try:
+                        current_job_title_el = current_job_card.find_element(
+                            By.CSS_SELECTOR,
+                            ".artdeco-entity-lockup__title .job-card-container__link",
+                        )
+                    except Exception:
+                        try:
+                            current_job_title_el = current_job_card.find_element(
+                                By.CSS_SELECTOR, ".job-card-container__link"
+                            )
+                        except Exception:
+                            print(
+                                f"  Job {idx + 1}: Could not re-find job title element - SKIPPING"
+                            )
+                            continue
+
                     time.sleep(0.5)
-                    job_title_el.click()
+
+                    print(f"  Clicking on job title to open details...")
+                    current_job_title_el.click()
                     time.sleep(2)
+
+                    # Check badWords in job details
+                    badwords_check_passed = True
                     try:
                         job_details = self.driver.find_element(
                             By.CSS_SELECTOR, '[class*="jobs-box__html-content"]'
                         ).text.lower()
-                        if any(
-                            re.search(r"\b" + re.escape(bad) + r"\b", job_details)
-                            for bad in bad_words
-                        ):
-                            continue
-                    except Exception:
-                        pass
-                    apply_to_job(self.driver, autofill_data)
+
+                        if bad_words:  # Only check if badWords array is not empty
+                            if any(
+                                re.search(r"\b" + re.escape(bad) + r"\b", job_details)
+                                for bad in bad_words
+                            ):
+                                badwords_check_passed = False
+                                print(f"  Job details contain bad words - SKIPPING")
+                                continue
+                            else:
+                                print(f"  Job details don't contain bad words - OK")
+                        else:
+                            print(f"  No bad words filter - OK")
+                    except Exception as e:
+                        print(
+                            f"  Could not check job details for bad words: {e} - Proceeding anyway"
+                        )
+
+                    if badwords_check_passed:
+                        print(f"  Calling apply_to_job()...")
+                        result = apply_to_job(self.driver, autofill_data)
+                        print(f"  apply_to_job() returned: {result}")
+
+                        if result:
+                            applied_count += 1
+                            print(
+                                f"  Successfully applied! Total applications: {applied_count}"
+                            )
+
+                        # Small delay after application
+                        time.sleep(1)
+
                 except Exception as e:
-                    print(f"Error processing filtered job: {e}")
+                    print(f"  Error processing filtered job {idx + 1}: {e}")
+
+            print(f"\nCompleted job applications. Applied to {applied_count} jobs.")
             try:
                 scroll_container = self.driver.find_element(
                     By.CSS_SELECTOR, ".scaffold-layout__list > div"
@@ -199,11 +318,8 @@ class BrowserManager:
             return False
 
     def stop(self):
-        try:
-            if self.driver:
-                self.driver.quit()
-                self.driver = None
-        except Exception:
+        if self.driver:
+            self.driver.quit()
             self.driver = None
 
     def is_running(self):
