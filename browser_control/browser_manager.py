@@ -116,16 +116,12 @@ class BrowserManager:
                     return None
                 try:
                     print(f"\nProcessing job card {idx + 1}/{len(job_cards)}")
-
-                    # Пропускать вакансии, если уже подано (есть текст 'Applied')
-                    already_applied = False
                     try:
                         applied_footer = job_card.find_element(
                             By.CSS_SELECTOR, ".job-card-container__footer-job-state"
                         )
                         footer_text = applied_footer.text.strip().lower()
                         if "applied" in footer_text:
-                            already_applied = True
                             print(
                                 f"  Job {idx + 1}: Already applied (footer: '{footer_text}') - SKIPPING"
                             )
@@ -225,7 +221,8 @@ class BrowserManager:
                     print(
                         f"  Job {idx + 1}: PASSED ALL FILTERS - Adding to filtered jobs"
                     )
-                    filtered_jobs.append((job_card, job_title_el))
+                    # Store the original index along with the job card and title element
+                    filtered_jobs.append((idx, job_card, job_title_el))
                 except (NoSuchElementException, StaleElementReferenceException, WebDriverException) as e:
                     print(f"  Job {idx + 1}: Error filtering job: {e} - SKIPPING")
 
@@ -234,25 +231,25 @@ class BrowserManager:
             )
 
             applied_count = 0
-            for idx, (job_card, job_title_el) in enumerate(filtered_jobs):
+            for filter_idx, (original_idx, job_card, job_title_el) in enumerate(filtered_jobs):
                 if not should_continue():
                     print("Bot stopped by user during job application.")
                     return None
                 try:
-                    print(f"\nApplying to filtered job {idx + 1}/{len(filtered_jobs)}")
+                    print(f"\nApplying to filtered job {filter_idx + 1}/{len(filtered_jobs)} (original position {original_idx + 1})")
 
                     # Re-find job cards to avoid stale element reference
                     current_job_cards = self.driver.find_elements(
                         By.CSS_SELECTOR, ".scaffold-layout__list-item"
                     )
 
-                    if idx >= len(current_job_cards):
+                    if original_idx >= len(current_job_cards):
                         print(
-                            f"  Job {idx + 1}: Job card no longer available - SKIPPING"
+                            f"  Job {filter_idx + 1}: Job card no longer available at original position {original_idx + 1} - SKIPPING"
                         )
                         continue
 
-                    current_job_card = current_job_cards[idx]
+                    current_job_card = current_job_cards[original_idx]
 
                     # Re-find a job title element
                     current_job_title_el = None
@@ -268,7 +265,7 @@ class BrowserManager:
                             )
                         except NoSuchElementException:
                             print(
-                                f"  Job {idx + 1}: Could not re-find job title element - SKIPPING"
+                                f"  Job {filter_idx + 1}: Could not re-find job title element - SKIPPING"
                             )
                             continue
 
@@ -317,7 +314,7 @@ class BrowserManager:
                         time.sleep(1)
 
                 except (NoSuchElementException, StaleElementReferenceException, WebDriverException, TimeoutException) as e:
-                    print(f"  Error processing filtered job {idx + 1}: {e}")
+                    print(f"  Error processing filtered job {filter_idx + 1}: {e}")
 
             print(f"\nCompleted job applications. Applied to {applied_count} jobs.")
             try:
