@@ -1,7 +1,11 @@
 import json
 import time
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+    WebDriverException,
+)
 from selenium.webdriver.common.by import By
 
 from browser_control.browser_utils import (
@@ -38,7 +42,7 @@ def apply_to_job(driver, autofill_data):
                 By.CSS_SELECTOR, ".scaffold-layout__detail"
             )
             print("Found scaffold-layout__detail section")
-        except:
+        except NoSuchElementException:
             print("scaffold-layout__detail section not found, searching in full page")
             detail_section = driver
 
@@ -81,7 +85,11 @@ def apply_to_job(driver, autofill_data):
                             easy_apply_btn = detail_section.find_element(
                                 By.CSS_SELECTOR, selector
                             )
-                        except:
+                        except (
+                            NoSuchElementException,
+                            StaleElementReferenceException,
+                            WebDriverException,
+                        ):
                             easy_apply_btn = None
 
                 if easy_apply_btn:
@@ -135,7 +143,11 @@ def apply_to_job(driver, autofill_data):
                         print(
                             f"  Button: id='{btn_id}', aria-label='{aria_label}', class='{btn_class}', text='{btn_text}'"
                         )
-                    except:
+                    except (
+                        StaleElementReferenceException,
+                        WebDriverException,
+                        AttributeError,
+                    ):
                         pass
             except Exception as e:
                 print(f"Could not debug buttons: {e}")
@@ -166,7 +178,11 @@ def apply_to_job(driver, autofill_data):
                     print(
                         f"  Potential modal {i+1}: class='{classes}', role='{role}', data-test='{data_test}', displayed={is_displayed}, text='{text_snippet}...'"
                     )
-                except:
+                except (
+                    StaleElementReferenceException,
+                    WebDriverException,
+                    AttributeError,
+                ):
                     pass
         except Exception as e:
             print(f"Could not debug potential modals: {e}")
@@ -192,12 +208,10 @@ def apply_to_job(driver, autofill_data):
             ]
 
             apply_modal = None
-            used_selector = None
 
             for selector in modal_selectors:
                 apply_modal = wait_for_element(driver, selector, timeout=3)
                 if apply_modal:
-                    used_selector = selector
                     print(f"Modal found with selector: {selector}")
                     break
 
@@ -221,7 +235,11 @@ def apply_to_job(driver, autofill_data):
                             print(
                                 f"  Modal {i+1}: class='{classes}', role='{role}', text='{text_snippet}...'"
                             )
-                        except:
+                        except (
+                            StaleElementReferenceException,
+                            WebDriverException,
+                            AttributeError,
+                        ):
                             pass
                 except Exception as e:
                     print(f"Could not debug modals: {e}")
@@ -385,7 +403,7 @@ def apply_to_job(driver, autofill_data):
                     )
                     smart_delay(1.0)
                     print("Scrolled to bottom of modal before submit")
-                except:
+                except (StaleElementReferenceException, WebDriverException, TypeError):
                     pass
 
                 print("Unchecking follow company checkbox before submit...")
