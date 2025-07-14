@@ -34,9 +34,25 @@ class FiltersTab:
         main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         main_canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Time Filter section
-        time_filter_frame = ttk.Frame(scrollable_frame)
-        time_filter_frame.pack(fill="x", padx=(20, 0), pady=(10, 10))
+        # Time Filter and Easy Apply section
+        filter_controls_frame = ttk.Frame(scrollable_frame)
+        filter_controls_frame.pack(fill="x", padx=(20, 0), pady=(10, 10))
+
+        # Left column for Easy Apply
+        easy_apply_frame = ttk.Frame(filter_controls_frame)
+        easy_apply_frame.pack(side="left", padx=(0, 20))
+
+        self.easy_apply_var = tk.BooleanVar(value=False)
+        self.easy_apply_checkbox = ttk.Checkbutton(
+            easy_apply_frame, 
+            text="Easy apply only", 
+            variable=self.easy_apply_var
+        )
+        self.easy_apply_checkbox.pack(anchor="w", pady=5)
+
+        # Right column for Time Filter
+        time_filter_frame = ttk.Frame(filter_controls_frame)
+        time_filter_frame.pack(side="left")
 
         ttk.Label(time_filter_frame, text="Time Filter").pack(anchor="w")
         self.timeFilter_combo = ttk.Combobox(
@@ -70,12 +86,6 @@ class FiltersTab:
         self.create_word_list_section(
             filters_container, "Title Skip Words", "titleSkipWords"
         )
-
-        self.easy_apply_var = tk.BooleanVar(value=False)
-        self.easy_apply_checkbox = ttk.Checkbutton(
-            scrollable_frame, text="Easy apply only", variable=self.easy_apply_var
-        )
-        self.easy_apply_checkbox.pack(anchor="w", pady=5)
 
         ttk.Button(
             scrollable_frame, text="Save Filters", command=self.save_filters
