@@ -1,7 +1,45 @@
 {
-  "badWords": [],
-  "titleFilterWords": [],
-  "titleSkipWords": [],
+  "badWords": [
+    "laravel",
+    "ruby",
+    "c#",
+    "rust",
+    "c++",
+    "unity",
+    "unreal engine",
+    "spring boot",
+    "spring framework"
+  ],
+  "titleFilterWords": [
+    "frontend",
+    "front-end",
+    "front end",
+    "full-stack",
+    "fullstack",
+    "javascript",
+    "react",
+    "full stack",
+    "web developer",
+    "web"
+  ],
+  "titleSkipWords": [
+    "senior",
+    "cloud devops",
+    "devops",
+    "back end",
+    "python",
+    "leader",
+    "lead",
+    "tech lead",
+    "software",
+    "backend oriented",
+    "designer",
+    "S.r",
+    "rust",
+    "low-level",
+    "Marketing",
+    "Staff"
+  ],
   "timeFilter": "r604800",
   "easyApplyOnly": true
 }

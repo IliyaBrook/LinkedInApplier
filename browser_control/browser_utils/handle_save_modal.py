@@ -98,9 +98,6 @@ def handle_save_application_modal(driver, max_attempts=3):
             smart_delay(0.5)
 
     return False
-
-
-def check_for_save_modal(driver):
     """
     Quick check if save modal is present without trying to handle it.
     """

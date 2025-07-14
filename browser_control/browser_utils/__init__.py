@@ -6,11 +6,10 @@ from .wait_for_elements import (
     wait_for_clickable_element,
     smart_delay,
 )
-from .handle_save_modal import handle_save_application_modal, check_for_save_modal
+from .handle_save_modal import handle_save_application_modal
 from .terminate_job_modal import (
     terminate_job_modal,
     close_all_modals,
-    close_application_sent_modal,
 )
 
 __all__ = [
@@ -21,8 +20,6 @@ __all__ = [
     "wait_for_clickable_element",
     "smart_delay",
     "handle_save_application_modal",
-    "check_for_save_modal",
     "terminate_job_modal",
     "close_all_modals",
-    "close_application_sent_modal",
 ]

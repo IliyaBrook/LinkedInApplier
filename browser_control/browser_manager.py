@@ -1,17 +1,17 @@
-import os
 import json
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from pathlib import Path
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-from .easy_apply__job import apply_to_job
+import os
 import re
+import time
+from pathlib import Path
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
+
+from .easy_apply__job import apply_to_job
 
 PROFILE_DIR = Path(__file__).parent.parent / "chrome_profile"
 PROFILE_DEFAULT = PROFILE_DIR / "Default"
@@ -23,7 +23,8 @@ class BrowserManager:
         self.driver = None
         self.ensure_profile_dir()
 
-    def ensure_profile_dir(self):
+    @staticmethod
+    def ensure_profile_dir():
         PROFILE_DEFAULT.mkdir(parents=True, exist_ok=True)
         gitkeep = PROFILE_DIR / ".gitkeep"
         if not gitkeep.exists():
@@ -75,8 +76,15 @@ class BrowserManager:
                 try:
                     with open(filters_path, "r", encoding="utf-8") as f:
                         filters = json.load(f)
-                except Exception:
+                    print(f"DEBUG: Successfully loaded filters from {filters_path}")
+                    print(
+                        f"DEBUG: Raw titleSkipWords: {filters.get('titleSkipWords', [])}"
+                    )
+                except Exception as e:
+                    print(f"DEBUG: Failed to load filters: {e}")
                     filters = {}
+            else:
+                print("DEBUG: No filters_path provided")
             wait = WebDriverWait(self.driver, 20)
             time.sleep(2)
             job_cards = self.driver.find_elements(
@@ -90,8 +98,10 @@ class BrowserManager:
 
             print(f"Found {len(job_cards)} job cards on page")
             print(
-                f"Filter settings: titleFilterWords={title_filter_words}, titleSkipWords={title_skip_words}, badWords={bad_words}"
+                f"Filter settings: titleFilterWords={title_filter_words[:5]}{'...' if len(title_filter_words) > 5 else ''}, titleSkipWords={title_skip_words[:5]}{'...' if len(title_skip_words) > 5 else ''}, badWords={bad_words[:5]}{'...' if len(bad_words) > 5 else ''}"
             )
+            print(f"DEBUG: Full titleSkipWords = {title_skip_words}")
+            print(f"DEBUG: 'senior' in titleSkipWords = {'senior' in title_skip_words}")
 
             filtered_jobs = []
             for idx, job_card in enumerate(job_cards):
@@ -122,10 +132,14 @@ class BrowserManager:
                             By.CSS_SELECTOR,
                             ".artdeco-entity-lockup__title .job-card-container__link",
                         )
+                        print(f"  DEBUG: Found job title element with first selector")
                     except Exception:
                         try:
                             job_title_el = job_card.find_element(
                                 By.CSS_SELECTOR, ".job-card-container__link"
+                            )
+                            print(
+                                f"  DEBUG: Found job title element with second selector"
                             )
                         except Exception:
                             print(
@@ -133,8 +147,13 @@ class BrowserManager:
                             )
                             continue
 
-                    job_title = job_title_el.text.strip().lower()
-                    print(f"  Job {idx + 1}: Title = '{job_title}'")
+                    raw_title = job_title_el.text.strip()
+                    aria_label = job_title_el.get_attribute("aria-label") or ""
+                    job_title = raw_title.lower()
+                    print(
+                        f"  Job {idx + 1}: Raw title = '{raw_title}', Processed title = '{job_title}'"
+                    )
+                    print(f"  DEBUG: aria-label = '{aria_label}'")
 
                     subtitle = ""
                     try:
@@ -168,12 +187,25 @@ class BrowserManager:
 
                     # Check title skip words
                     if title_skip_words:
+                        print(
+                            f"  DEBUG: Checking job title '{job_title}' against skip words {title_skip_words[:3]}..."
+                        )
+                        print(
+                            f"  DEBUG: Job title length: {len(job_title)}, bytes: {job_title.encode('utf-8')}"
+                        )
+                        print(
+                            f"  DEBUG: Looking for 'senior' specifically: {'senior' in job_title}"
+                        )
                         skip = any(
                             skip_word in job_title for skip_word in title_skip_words
                         )
                         if skip:
+                            # Find which skip word matched
+                            matched_words = [
+                                word for word in title_skip_words if word in job_title
+                            ]
                             print(
-                                f"  Job {idx + 1}: Title contains skip words - SKIPPING"
+                                f"  Job {idx + 1}: Title contains skip words {matched_words} - SKIPPING"
                             )
                             continue
                         else:
@@ -199,7 +231,7 @@ class BrowserManager:
             for idx, (job_card, job_title_el) in enumerate(filtered_jobs):
                 if not should_continue():
                     print("Bot stopped by user during job application.")
-                    return
+                    return None
                 try:
                     print(f"\nApplying to filtered job {idx + 1}/{len(filtered_jobs)}")
 
@@ -216,7 +248,7 @@ class BrowserManager:
 
                     current_job_card = current_job_cards[idx]
 
-                    # Re-find job title element
+                    # Re-find a job title element
                     current_job_title_el = None
                     try:
                         current_job_title_el = current_job_card.find_element(
@@ -247,7 +279,7 @@ class BrowserManager:
                             By.CSS_SELECTOR, '[class*="jobs-box__html-content"]'
                         ).text.lower()
 
-                        if bad_words:  # Only check if badWords array is not empty
+                        if bad_words:  # Only check if the badWords array is not empty
                             if any(
                                 re.search(r"\b" + re.escape(bad) + r"\b", job_details)
                                 for bad in bad_words

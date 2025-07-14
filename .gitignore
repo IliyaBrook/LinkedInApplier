@@ -73,6 +73,7 @@ driver.log
 
 # VSCode
 .vscode/
+.idea/
 
 # Cursor
 .cursor/**/*.js

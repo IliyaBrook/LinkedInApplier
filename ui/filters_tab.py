@@ -1,58 +1,52 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import json
-import os
 
 
 class FiltersTab:
     def __init__(self, parent, filters_file):
         self.frame = ttk.Frame(parent)
         self.filters_file = filters_file
-        self.badWords_var = tk.StringVar()
-        self.titleFilterWords_var = tk.StringVar()
-        self.titleSkipWords_var = tk.StringVar()
         self.timeFilter_var = tk.StringVar()
+        self.badWords_entries = []
+        self.titleFilterWords_entries = []
+        self.titleSkipWords_entries = []
         self.job_apply_url = ""
         self.create_widgets()
         self.load_filters()
         self.update_job_apply_url()
 
     def create_widgets(self):
-        inputMinHeight = 5
-        ttk.Label(self.frame, text="Bad Words (comma separated)").pack(anchor="w")
-        self.badWords_entry = tk.Text(
-            self.frame, height=inputMinHeight, width=60, wrap="word"
+        main_canvas = tk.Canvas(self.frame)
+        scrollbar = ttk.Scrollbar(
+            self.frame, orient="vertical", command=main_canvas.yview
         )
-        self.badWords_entry.pack(fill="x")
-        self.badWords_entry.bind(
-            "<KeyRelease>", lambda e: self._auto_resize(self.badWords_entry)
+        scrollable_frame = ttk.Frame(main_canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all")),
         )
 
-        ttk.Label(self.frame, text="Title Filter Words (comma separated)").pack(
-            anchor="w"
+        main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        main_canvas.configure(yscrollcommand=scrollbar.set)
+
+        self.create_word_list_section(scrollable_frame, "Bad Words", "badWords")
+        self.create_word_list_section(
+            scrollable_frame, "Title Filter Words", "titleFilterWords"
         )
-        self.titleFilterWords_entry = tk.Text(
-            self.frame, height=inputMinHeight, width=60, wrap="word"
-        )
-        self.titleFilterWords_entry.pack(fill="x")
-        self.titleFilterWords_entry.bind(
-            "<KeyRelease>", lambda e: self._auto_resize(self.titleFilterWords_entry)
+        self.create_word_list_section(
+            scrollable_frame, "Title Skip Words", "titleSkipWords"
         )
 
-        ttk.Label(self.frame, text="Title Skip Words (comma separated)").pack(
-            anchor="w"
-        )
-        self.titleSkipWords_entry = tk.Text(
-            self.frame, height=inputMinHeight, width=60, wrap="word"
-        )
-        self.titleSkipWords_entry.pack(fill="x")
-        self.titleSkipWords_entry.bind(
-            "<KeyRelease>", lambda e: self._auto_resize(self.titleSkipWords_entry)
-        )
+        ttk.Separator(scrollable_frame, orient="horizontal").pack(fill="x", pady=10)
 
-        ttk.Label(self.frame, text="Time Filter").pack(anchor="w")
+        ttk.Label(scrollable_frame, text="Time Filter").pack(anchor="w")
         self.timeFilter_combo = ttk.Combobox(
-            self.frame, textvariable=self.timeFilter_var, state="readonly", width=30
+            scrollable_frame,
+            textvariable=self.timeFilter_var,
+            state="readonly",
+            width=30,
         )
         self.timeFilter_combo["values"] = (
             "Any Time",
@@ -60,63 +54,123 @@ class FiltersTab:
             "Past Week",
             "Past Month",
         )
-        self.timeFilter_combo.pack(fill="x")
+        self.timeFilter_combo.pack(fill="x", pady=(0, 10))
         self.timeFilter_combo.bind(
             "<<ComboboxSelected>>", lambda e: self.on_time_filter_change()
         )
 
         self.easy_apply_var = tk.BooleanVar(value=False)
         self.easy_apply_checkbox = ttk.Checkbutton(
-            self.frame, text="Easy apply only", variable=self.easy_apply_var
+            scrollable_frame, text="Easy apply only", variable=self.easy_apply_var
         )
         self.easy_apply_checkbox.pack(anchor="w", pady=5)
 
-        ttk.Button(self.frame, text="Save Filters", command=self.save_filters).pack(
-            pady=5
-        )
+        ttk.Button(
+            scrollable_frame, text="Save Filters", command=self.save_filters
+        ).pack(pady=15)
 
-    def _auto_resize(self, text_widget):
-        lines = int(text_widget.index("end-1c").split(".")[0])
-        text_widget.config(height=max(4, min(lines, 10)))
+        main_canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        def _on_mousewheel(event):
+            main_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        main_canvas.bind("<MouseWheel>", _on_mousewheel)
+
+    def create_word_list_section(self, parent, title, field_type):
+        section_frame = ttk.LabelFrame(parent, text=title, padding=10)
+        section_frame.pack(fill="x", pady=5)
+
+        list_frame = ttk.Frame(section_frame)
+        list_frame.pack(fill="x")
+
+        setattr(self, f"{field_type}_list_frame", list_frame)
+
+        add_button = ttk.Button(
+            section_frame, text="Add", command=lambda: self.add_word_entry(field_type)
+        )
+        add_button.pack(anchor="w", pady=(5, 0))
+
+    def add_word_entry(self, field_type, initial_value=""):
+        list_frame = getattr(self, f"{field_type}_list_frame")
+        entries_list = getattr(self, f"{field_type}_entries")
+
+        entry_frame = ttk.Frame(list_frame)
+        entry_frame.pack(fill="x", pady=2)
+
+        delete_btn = ttk.Button(
+            entry_frame,
+            text="Delete",
+            width=8,
+            command=lambda: self.remove_word_entry(field_type, entry_frame, entry_var),
+        )
+        delete_btn.pack(side="left", padx=(0, 5))
+
+        entry_var = tk.StringVar(value=initial_value)
+        entry = ttk.Entry(entry_frame, textvariable=entry_var)
+        entry.pack(side="left", fill="x", expand=True)
+
+        entries_list.append(entry_var)
+
+        return entry_var
+
+    def remove_word_entry(self, field_type, entry_frame, entry_var):
+        entries_list = getattr(self, f"{field_type}_entries")
+        if entry_var in entries_list:
+            entries_list.remove(entry_var)
+        entry_frame.destroy()
 
     def load_filters(self):
         try:
             with open(self.filters_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            self.badWords_entry.delete("1.0", tk.END)
-            self.badWords_entry.insert("1.0", ", ".join(data.get("badWords", [])))
-            self.titleFilterWords_entry.delete("1.0", tk.END)
-            self.titleFilterWords_entry.insert(
-                "1.0", ", ".join(data.get("titleFilterWords", []))
-            )
-            self.titleSkipWords_entry.delete("1.0", tk.END)
-            self.titleSkipWords_entry.insert(
-                "1.0", ", ".join(data.get("titleSkipWords", []))
-            )
+
+            for word in data.get("badWords", []):
+                if word.strip():
+                    self.add_word_entry("badWords", word.strip())
+
+            for word in data.get("titleFilterWords", []):
+                if word.strip():
+                    self.add_word_entry("titleFilterWords", word.strip())
+
+            for word in data.get("titleSkipWords", []):
+                if word.strip():
+                    self.add_word_entry("titleSkipWords", word.strip())
+
+            if not data.get("badWords"):
+                self.add_word_entry("badWords")
+            if not data.get("titleFilterWords"):
+                self.add_word_entry("titleFilterWords")
+            if not data.get("titleSkipWords"):
+                self.add_word_entry("titleSkipWords")
+
             self.timeFilter_var.set(
                 self.time_filter_label(data.get("timeFilter", "any"))
             )
             self.easy_apply_var.set(data.get("easyApplyOnly", False))
         except Exception:
+            self.add_word_entry("badWords")
+            self.add_word_entry("titleFilterWords")
+            self.add_word_entry("titleSkipWords")
             self.timeFilter_var.set("Any Time")
             self.easy_apply_var.set(False)
 
     def save_filters(self):
         data = {
             "badWords": [
-                w.strip()
-                for w in self.badWords_entry.get("1.0", tk.END).split(",")
-                if w.strip()
+                entry.get().strip()
+                for entry in self.badWords_entries
+                if entry.get().strip()
             ],
             "titleFilterWords": [
-                w.strip()
-                for w in self.titleFilterWords_entry.get("1.0", tk.END).split(",")
-                if w.strip()
+                entry.get().strip()
+                for entry in self.titleFilterWords_entries
+                if entry.get().strip()
             ],
             "titleSkipWords": [
-                w.strip()
-                for w in self.titleSkipWords_entry.get("1.0", tk.END).split(",")
-                if w.strip()
+                entry.get().strip()
+                for entry in self.titleSkipWords_entries
+                if entry.get().strip()
             ],
             "timeFilter": self.time_filter_code(self.timeFilter_var.get()),
             "easyApplyOnly": self.easy_apply_var.get(),

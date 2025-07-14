@@ -1,9 +1,8 @@
 import os
 import threading
-import tkinter as tk
 from tkinter import ttk, messagebox
 from ttkthemes import ThemedTk
-from ui.filters_tab import FiltersTab
+from .filters_tab import FiltersTab
 from ui.autofill_tab import AutofillTab
 from ui.browser_tab import BrowserTab
 from browser_control.browser_manager import BrowserManager

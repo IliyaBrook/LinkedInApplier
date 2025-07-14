@@ -1,9 +1,6 @@
-import json
 import os
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-from ttkthemes import ThemedTk
-from ui.main_ui import run
+
+from ui import run
 
 DB_DIR = "DB"
 FILTERS_FILE = os.path.join(DB_DIR, "user_filters.json")
@@ -12,3 +9,4 @@ BROWSER_FILE = os.path.join(DB_DIR, "browser_settings.json")
 
 if __name__ == "__main__":
     run()
+

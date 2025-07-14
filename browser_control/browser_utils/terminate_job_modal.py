@@ -114,9 +114,6 @@ def close_all_modals(driver):
 
     except Exception as e:
         print(f"Error in close_all_modals: {e}")
-
-
-def close_application_sent_modal(driver):
     """
     Close the "Application sent" modal if it exists.
     """

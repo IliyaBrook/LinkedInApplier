@@ -1,28 +1,23 @@
 import json
 import time
+
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 from browser_control.browser_utils import (
-    scroll_to_and_click,
-    scroll_to_element,
     wait_for_elements,
     wait_for_element,
     wait_for_clickable_element,
     smart_delay,
     handle_save_application_modal,
-    check_for_save_modal,
     terminate_job_modal,
     close_all_modals,
-    close_application_sent_modal,
 )
 
 
 def apply_to_job(driver, autofill_data):
     """
-    Apply to job using Easy Apply with improved modal handling and speed.
+    Apply to a job using Easy Apply with improved modal handling and speed.
     Based on Chrome extension logic.
     """
     try:
@@ -41,7 +36,7 @@ def apply_to_job(driver, autofill_data):
                 print(f"Already applied to this job: {text_content}")
                 return True
 
-        # Find Easy Apply button using multiple selectors (updated based on real HTML structure)
+        # Find the Easy Apply button using multiple selectors (updated based on real HTML structure)
         easy_apply_btn = None
 
         # First, try to find the detail section
@@ -55,7 +50,7 @@ def apply_to_job(driver, autofill_data):
             print("scaffold-layout__detail section not found, searching in full page")
             detail_section = driver
 
-        # Try different selectors for Easy Apply button - updated based on real HTML structure
+        # Try different selectors for the Easy Apply button - updated based on real HTML structure
         selectors = [
             "#jobs-apply-button-id",  # Direct ID selector (most reliable)
             "button[aria-label*='Easy Apply']",  # Contains "Easy Apply" (not exact match)
@@ -137,12 +132,12 @@ def apply_to_job(driver, autofill_data):
         if not easy_apply_btn:
             print("Easy Apply button not found on job page")
 
-            # Debug: show what buttons are available in detail section
+            # Debug: show what buttons are available in a detail section
             try:
                 search_context = detail_section if detail_section != driver else driver
                 all_buttons = search_context.find_elements(By.TAG_NAME, "button")
                 print(f"Found {len(all_buttons)} buttons in detail section:")
-                for btn in all_buttons[:10]:  # Show first 10 buttons
+                for btn in all_buttons[:10]:  # Show the first 10 buttons
                     try:
                         aria_label = btn.get_attribute("aria-label") or "No aria-label"
                         btn_class = btn.get_attribute("class") or "No class"
@@ -246,7 +241,7 @@ def apply_to_job(driver, autofill_data):
                 except Exception as e:
                     print(f"Could not debug modals: {e}")
 
-                # Check if application was already submitted
+                # Check if the application was already submitted
                 success_messages = wait_for_elements(
                     driver, '[data-test-modal=""]', timeout=2
                 )
@@ -345,7 +340,7 @@ def apply_to_job(driver, autofill_data):
                     except Exception as e:
                         print(f"Error during retry: {e}")
 
-                # If still no button found, check if application might be complete
+                # If still no button found, check if the application might be complete
                 if next_action["type"] == "none":
                     try:
                         modal_text = apply_modal.text.lower()
