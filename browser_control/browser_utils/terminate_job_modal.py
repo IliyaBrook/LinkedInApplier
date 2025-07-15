@@ -1,12 +1,13 @@
-from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
-from .wait_for_elements import wait_for_element, wait_for_elements, smart_delay
+from selenium.webdriver.common.by import By
+
 from .handle_save_modal import handle_save_application_modal
+from .wait_for_elements import wait_for_element, wait_for_elements, smart_delay
 
 
 def terminate_job_modal(driver, context=None):
     """
-    Terminate job modal by properly closing it and handling any save modals.
+    Terminate a job modal by properly closing it and handling any save modals.
     Based on Chrome extension terminateJobModel function.
     """
     if context is None:
@@ -17,7 +18,7 @@ def terminate_job_modal(driver, context=None):
         print("Save modal handled, exiting terminateJobModal")
         return True
 
-    # Look for dismiss button
+    # Look for the dismissed button
     dismiss_button = None
     try:
         dismiss_button = context.find_element(
@@ -36,7 +37,7 @@ def terminate_job_modal(driver, context=None):
             dismiss_button.click()
             smart_delay(1.0)
 
-            # Check again for save modal after dismiss
+            # Check again for save modal after dismissing
             if handle_save_application_modal(driver):
                 print("Save modal handled after dismiss")
                 return True

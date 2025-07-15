@@ -314,7 +314,7 @@ def apply_to_job(driver, autofill_data):
 
             form_updated = False
             if form:
-                form_updated = process_form_fields(driver, form, autofill_data)
+                form_updated = process_form_fields(form, autofill_data)
                 print("Form fields processed")
             else:
                 print("No form to process, skipping form field processing")
@@ -684,7 +684,7 @@ def apply_to_job(driver, autofill_data):
         return False
 
 
-def process_form_fields(driver, form, autofill_data):
+def process_form_fields(form, autofill_data):
     """
     Process all form fields (inputs, radio buttons, dropdowns) in the given form.
     """
@@ -696,7 +696,7 @@ def process_form_fields(driver, form, autofill_data):
     if process_radio_buttons(form, autofill_data):
         updated = True
 
-    if process_dropdowns(driver, form, autofill_data):
+    if process_dropdowns(form, autofill_data):
         updated = True
 
     return updated
@@ -721,7 +721,7 @@ def process_input_fields(form, autofill_data):
                     try:
                         field.click()
                         smart_delay(0.1)
-                    except:
+                    except WebDriverException:
                         pass
                 continue
 
@@ -874,7 +874,7 @@ def process_radio_buttons(form, autofill_data):
     return updated
 
 
-def process_dropdowns(driver, form, autofill_data):
+def process_dropdowns(form, autofill_data):
     updated = False
     selects = form.find_elements(By.TAG_NAME, "select")
 
@@ -1002,7 +1002,12 @@ def get_field_name(field, form):
                 except NoSuchElementException:
                     pass
                 name = span.text.strip() if span else label_el.text.strip()
-            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
+            except (
+                NoSuchElementException,
+                StaleElementReferenceException,
+                WebDriverException,
+                AttributeError,
+            ):
                 pass
 
     return name
@@ -1018,7 +1023,12 @@ def get_radio_label(radio, fieldset):
             By.CSS_SELECTOR, f'label[for="{radio.get_attribute("id")}"]'
         )
         radio_label = radio_label_el.text.strip()
-    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
+    except (
+        NoSuchElementException,
+        StaleElementReferenceException,
+        WebDriverException,
+        AttributeError,
+    ):
         pass
 
     if not radio_label:
@@ -1053,8 +1063,75 @@ def get_dropdown_label(select):
 
         label = aria_hidden.text.strip() if aria_hidden else label_el.text.strip()
         return label
-    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
+    except (
+        NoSuchElementException,
+        StaleElementReferenceException,
+        WebDriverException,
+        AttributeError,
+    ):
         return f"Dropdown {int(time.time())}"
+
+
+def find_button_with_selectors(
+    modal, css_selectors, xpath_selectors, button_type, additional_validation=None
+):
+    """
+    Generic function to find buttons using CSS and XPath selectors.
+
+    Args:
+        modal: The modal element to search within
+        css_selectors: List of CSS selectors to try
+        xpath_selectors: List of XPath selectors to try
+        button_type: String describing the button type (for logging)
+        additional_validation: Optional function to validate the found button
+
+    Returns:
+        The found button element or None
+    """
+    button = None
+
+    # Try CSS selectors first
+    for selector in css_selectors:
+        try:
+            button = modal.find_element(By.CSS_SELECTOR, selector)
+            if button and button.is_displayed():
+                if additional_validation is None or additional_validation(button):
+                    print(f"Found {button_type} button with CSS selector: {selector}")
+                    return button
+                else:
+                    button = None
+        except (
+            NoSuchElementException,
+            StaleElementReferenceException,
+            WebDriverException,
+            AttributeError,
+        ):
+            continue
+
+    # If not found with CSS, try XPath selectors
+    if not button:
+        for xpath_selector in xpath_selectors:
+            try:
+                elements = modal.find_elements(By.XPATH, xpath_selector)
+                for elem in elements:
+                    if elem.is_displayed():
+                        if additional_validation is None or additional_validation(elem):
+                            button = elem
+                            print(
+                                f"Found {button_type} button with XPath selector: {xpath_selector}"
+                            )
+                            break
+                if button:
+                    break
+            except (
+                NoSuchElementException,
+                StaleElementReferenceException,
+                WebDriverException,
+                AttributeError,
+            ):
+                continue
+
+    return button
 
 
 def find_next_action_button(driver, modal):
@@ -1081,7 +1158,12 @@ def find_next_action_button(driver, modal):
         if continue_btn and continue_btn.is_displayed():
             print("Found 'Continue applying' button")
             return {"type": "continue", "element": continue_btn}
-    except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
+    except (
+        NoSuchElementException,
+        StaleElementReferenceException,
+        WebDriverException,
+        AttributeError,
+    ):
         pass
 
     submit_selectors = [
@@ -1103,41 +1185,23 @@ def find_next_action_button(driver, modal):
         '//button[contains(@class, "artdeco-button--primary") and contains(@aria-label, "Submit")]',
     ]
 
-    submit_btn = None
+    def validate_submit_button(button):
+        button_aria_label = button.get_attribute("aria-label") or ""
+        submit_button_text = button.text.strip()
+        return (
+            "submit" in button_aria_label.lower()
+            or "submit" in submit_button_text.lower()
+        )
 
-    for selector in submit_selectors:
-        try:
-            submit_btn = modal.find_element(By.CSS_SELECTOR, selector)
-            if submit_btn and submit_btn.is_displayed():
-
-                aria_label = submit_btn.get_attribute("aria-label") or ""
-                button_text = submit_btn.text.strip()
-                if "submit" in aria_label.lower() or "submit" in button_text.lower():
-                    print(f"Found submit button with CSS selector: {selector}")
-                    break
-                else:
-                    submit_btn = None
-        except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
-            continue
-
-    if not submit_btn:
-        for xpath_selector in submit_xpath_selectors:
-            try:
-                elements = modal.find_elements(By.XPATH, xpath_selector)
-                for elem in elements:
-                    if elem.is_displayed():
-                        submit_btn = elem
-                        print(
-                            f"Found submit button with XPath selector: {xpath_selector}"
-                        )
-                        break
-                if submit_btn:
-                    break
-            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
-                continue
+    submit_btn = find_button_with_selectors(
+        modal,
+        submit_selectors,
+        submit_xpath_selectors,
+        "submit",
+        validate_submit_button,
+    )
 
     if submit_btn:
-
         try:
             aria_label = submit_btn.get_attribute("aria-label") or "No aria-label"
             button_text = submit_btn.text.strip() or "No text"
@@ -1195,32 +1259,9 @@ def find_next_action_button(driver, modal):
         "//button[@data-live-test-easy-apply-review-button]",
     ]
 
-    review_btn = None
-
-    for selector in review_css_selectors:
-        try:
-            review_btn = modal.find_element(By.CSS_SELECTOR, selector)
-            if review_btn and review_btn.is_displayed():
-                print(f"Found review button with CSS selector: {selector}")
-                break
-        except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
-            continue
-
-    if not review_btn:
-        for xpath_selector in review_xpath_selectors:
-            try:
-                elements = modal.find_elements(By.XPATH, xpath_selector)
-                for elem in elements:
-                    if elem.is_displayed():
-                        review_btn = elem
-                        print(
-                            f"Found review button with XPath selector: {xpath_selector}"
-                        )
-                        break
-                if review_btn:
-                    break
-            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
-                continue
+    review_btn = find_button_with_selectors(
+        modal, review_css_selectors, review_xpath_selectors, "review"
+    )
 
     if review_btn:
         print(
@@ -1258,32 +1299,9 @@ def find_next_action_button(driver, modal):
         '//button[contains(@class, "artdeco-button--primary") and contains(@aria-label, "Continue")]',
     ]
 
-    next_btn = None
-
-    for selector in next_css_selectors:
-        try:
-            next_btn = modal.find_element(By.CSS_SELECTOR, selector)
-            if next_btn and next_btn.is_displayed():
-                print(f"Found next button with CSS selector: {selector}")
-                break
-        except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
-            continue
-
-    if not next_btn:
-        for xpath_selector in next_xpath_selectors:
-            try:
-                elements = modal.find_elements(By.XPATH, xpath_selector)
-                for elem in elements:
-                    if elem.is_displayed():
-                        next_btn = elem
-                        print(
-                            f"Found next button with XPath selector: {xpath_selector}"
-                        )
-                        break
-                if next_btn:
-                    break
-            except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
-                continue
+    next_btn = find_button_with_selectors(
+        modal, next_css_selectors, next_xpath_selectors, "next"
+    )
 
     if next_btn:
         print(
@@ -1348,7 +1366,6 @@ def uncheck_follow_company_checkbox(driver):
         ]
 
         follow_checkbox = None
-        used_selector = None
 
         search_context = footer_section if footer_section else driver
 
@@ -1356,7 +1373,6 @@ def uncheck_follow_company_checkbox(driver):
             try:
                 follow_checkbox = search_context.find_element(By.CSS_SELECTOR, selector)
                 if follow_checkbox:
-                    used_selector = selector
                     print(f"Found follow company checkbox with selector: {selector}")
                     break
             except NoSuchElementException:
@@ -1463,7 +1479,7 @@ def uncheck_follow_company_checkbox(driver):
 
 def check_if_final_step(driver, modal):
     """
-    Check if we're on the final step by looking for 100% progress indicator.
+    Check if we're on the final step by looking for a 100% progress indicator.
     Returns True if we're on the final step, False otherwise.
     """
     try:
@@ -1494,7 +1510,12 @@ def check_if_final_step(driver, modal):
                         if value == "100" or aria_valuenow == "100":
                             print("✅ Progress is at 100% - we're on the final step!")
                             return True
-                except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
+                except (
+                    NoSuchElementException,
+                    StaleElementReferenceException,
+                    WebDriverException,
+                    AttributeError,
+                ):
                     continue
 
         percentage_selectors = [
@@ -1521,7 +1542,12 @@ def check_if_final_step(driver, modal):
                                 f"Found 100% aria-label indicator: {elem.get_attribute('aria-label')}"
                             )
                             return True
-                except (NoSuchElementException, StaleElementReferenceException, WebDriverException, AttributeError):
+                except (
+                    NoSuchElementException,
+                    StaleElementReferenceException,
+                    WebDriverException,
+                    AttributeError,
+                ):
                     continue
 
         print("No 100% progress indicator found - not on final step")
@@ -1534,7 +1560,7 @@ def check_if_final_step(driver, modal):
 
 def check_if_already_applied(text_content):
     """
-    Check if job is already applied based on text content.
+    Check if a job is already applied based on text content.
     Based on Chrome extension checkIfAlreadyApplied function.
     """
     if not text_content:
