@@ -85,7 +85,7 @@ def terminate_job_modal(driver, context=None):
 
 def close_all_modals(driver):
     """
-    Close all artdeco modals on the page.
+    Close all art deco modals on the page.
     """
     try:
         # First handle save modal

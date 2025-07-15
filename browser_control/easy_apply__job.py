@@ -8,15 +8,7 @@ from selenium.common.exceptions import (
 )
 from selenium.webdriver.common.by import By
 
-from browser_control.browser_utils import (
-    wait_for_elements,
-    wait_for_element,
-    wait_for_clickable_element,
-    smart_delay,
-    handle_save_application_modal,
-    terminate_job_modal,
-    close_all_modals,
-)
+from browser_control.easy_apply__utils import *
 
 
 def apply_to_job(driver, autofill_data):
