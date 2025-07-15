@@ -5,16 +5,16 @@ import time
 from pathlib import Path
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import (
     NoSuchElementException,
     TimeoutException,
     StaleElementReferenceException,
-    WebDriverException
+    WebDriverException,
 )
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 from .easy_apply__job import apply_to_job
@@ -60,7 +60,12 @@ class BrowserManager:
                 "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             )
             return True
-        except (FileNotFoundError, json.JSONDecodeError, OSError, WebDriverException) as e:
+        except (
+            FileNotFoundError,
+            json.JSONDecodeError,
+            OSError,
+            WebDriverException,
+        ) as e:
             print(f"Failed to start browser: {e}")
             return False
 
@@ -91,7 +96,7 @@ class BrowserManager:
                     filters = {}
             else:
                 print("DEBUG: No filters_path provided")
-            wait = WebDriverWait(self.driver, 20)
+            WebDriverWait(self.driver, 20)
             time.sleep(2)
             job_cards = self.driver.find_elements(
                 By.CSS_SELECTOR, ".scaffold-layout__list-item"
@@ -157,7 +162,6 @@ class BrowserManager:
                     )
                     print(f"  DEBUG: aria-label = '{aria_label}'")
 
-                    subtitle = ""
                     try:
                         subtitle = (
                             job_card.find_element(
@@ -217,13 +221,17 @@ class BrowserManager:
                     else:
                         print(f"  Job {idx + 1}: No title skip words - OK")
 
-                    # Easy Apply button check will be done on job details page, not in job card
+                    # Easy Apply button check will be done on the job details page, not in the job card
                     print(
                         f"  Job {idx + 1}: PASSED ALL FILTERS - Adding to filtered jobs"
                     )
                     # Store the original index along with the job card and title element
                     filtered_jobs.append((idx, job_card, job_title_el))
-                except (NoSuchElementException, StaleElementReferenceException, WebDriverException) as e:
+                except (
+                    NoSuchElementException,
+                    StaleElementReferenceException,
+                    WebDriverException,
+                ) as e:
                     print(f"  Job {idx + 1}: Error filtering job: {e} - SKIPPING")
 
             print(
@@ -231,12 +239,16 @@ class BrowserManager:
             )
 
             applied_count = 0
-            for filter_idx, (original_idx, job_card, job_title_el) in enumerate(filtered_jobs):
+            for filter_idx, (original_idx, job_card, job_title_el) in enumerate(
+                filtered_jobs
+            ):
                 if not should_continue():
                     print("Bot stopped by user during job application.")
                     return None
                 try:
-                    print(f"\nApplying to filtered job {filter_idx + 1}/{len(filtered_jobs)} (original position {original_idx + 1})")
+                    print(
+                        f"\nApplying to filtered job {filter_idx + 1}/{len(filtered_jobs)} (original position {original_idx + 1})"
+                    )
 
                     # Re-find job cards to avoid stale element reference
                     current_job_cards = self.driver.find_elements(
@@ -251,8 +263,6 @@ class BrowserManager:
 
                     current_job_card = current_job_cards[original_idx]
 
-                    # Re-find a job title element
-                    current_job_title_el = None
                     try:
                         current_job_title_el = current_job_card.find_element(
                             By.CSS_SELECTOR,
@@ -313,7 +323,12 @@ class BrowserManager:
                         # Small delay after application
                         time.sleep(1)
 
-                except (NoSuchElementException, StaleElementReferenceException, WebDriverException, TimeoutException) as e:
+                except (
+                    NoSuchElementException,
+                    StaleElementReferenceException,
+                    WebDriverException,
+                    TimeoutException,
+                ) as e:
                     print(f"  Error processing filtered job {filter_idx + 1}: {e}")
 
             print(f"\nCompleted job applications. Applied to {applied_count} jobs.")
@@ -348,7 +363,13 @@ class BrowserManager:
                     )
             except (NoSuchElementException, WebDriverException) as e:
                 print(f"No more pages or next button not found. Finished. {e}")
-        except (FileNotFoundError, json.JSONDecodeError, OSError, WebDriverException, TimeoutException) as e:
+        except (
+            FileNotFoundError,
+            json.JSONDecodeError,
+            OSError,
+            WebDriverException,
+            TimeoutException,
+        ) as e:
             print("Error in process_job_listings:", e)
             return False
 
